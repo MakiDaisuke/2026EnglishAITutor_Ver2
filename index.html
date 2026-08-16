@@ -972,7 +972,13 @@ function getRec(){
 function apiGet(done, fail){
   if(!GAS_URL){ SID='S1'; NAME='生徒 太郎'; CLS='1-1'; done(sampleData()); return; }
   fetch(GAS_URL+'?api=data&sid='+encodeURIComponent(SID)+'&t='+encodeURIComponent(TKEY))
-    .then(r=>r.json()).then(done).catch(fail);
+    .then(r=>r.text())
+    .then(txt=>{
+      let d; try{ d=JSON.parse(txt); }catch(e){ throw new Error('サーバー応答がJSONではありません: '+txt.replace(/<[^>]+>/g,' ').slice(0,160)); }
+      if(d && d.error) throw new Error('サーバーエラー: '+d.error);
+      try{ done(d); }catch(e){ console.error(e); throw new Error('画面の描画エラー: '+(e&&e.message||e)); }
+    })
+    .catch(fail);
 }
 function apiPost(p, done){
   if(!GAS_URL){ done(true, '', {ok:true}); return; }
@@ -1117,10 +1123,14 @@ function load(){
     if(!TKEY && (!SID || !DATA.me)) openGate();
     else if(!TKEY) queueFlush();
     if(TKEY) NAME='先生';
-  }, ()=>{
-    $('pane-home').innerHTML='<div class="empty">読みこめませんでした。再読み込みしてください。</div>';
+  }, (err)=>{
+    const msg=(err&&err.message)?err.message:'通信に失敗しました';
+    const html='<div class="empty">読みこめませんでした。再読み込みしてください。<br><span style="font-size:12px; color:var(--miss); word-break:break-all">'+esc(msg)+'</span><br><button class="ghost" id="reloadBtn" style="margin-top:10px">🔄 再読み込み</button> <button class="ghost" id="logoutBtn" style="margin-top:10px">ログアウト</button></div>';
+    $('pane-home').innerHTML=html;
     tutorSay('うまく読みこめなかった…ページを再読み込みしてみてね', 'think');
-    if(TKEY) $('pane-teacher').innerHTML='<div class="empty">読みこめませんでした。再読み込みしてください。</div>';
+    if(TKEY) $('pane-teacher').innerHTML=html;
+    document.querySelectorAll('#reloadBtn').forEach(b=>b.onclick=()=>location.reload());
+    document.querySelectorAll('#logoutBtn').forEach(b=>b.onclick=logout);
   });
 }
 
