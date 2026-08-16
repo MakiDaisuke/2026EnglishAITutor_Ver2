@@ -144,7 +144,7 @@
   .inst-status.rec{color:var(--miss)}
 
   /* ---- 本文(音読) ---- */
-  .sheet{padding:10px 16px 56vh; max-width:560px; margin:0 auto; word-break:break-word}
+  .sheet{padding:10px 16px 200px; max-width:560px; margin:0 auto; word-break:break-word}
   .hint{font-size:13px; color:var(--ink-soft); padding:10px 2px 14px}
   .qr-link{display:inline-flex; align-items:center; gap:6px; margin:0 0 12px;
     padding:10px 16px; border-radius:12px; background:#EAF1FB; color:#2B5FA8;
@@ -196,8 +196,20 @@
 
   #ctrl{position:fixed; left:0; right:0; bottom:0; z-index:30; display:none;
     background:rgba(255,255,255,.96); backdrop-filter:blur(10px); border-top:1px solid var(--line);
-    padding:10px 18px calc(14px + env(safe-area-inset-bottom)); max-width:760px; margin:0 auto}
+    padding:8px 16px calc(10px + env(safe-area-inset-bottom)); max-width:560px; margin:0 auto}
   @media(min-width:600px){ #ctrl{border-radius:16px 16px 0 0; left:50%; transform:translateX(-50%); width:560px} }
+  #ctrl .cpane .row{margin-bottom:0}
+  /* 上部ツールバー */
+  #topbar{position:sticky; top:52px; z-index:19; background:var(--paper); max-width:560px; margin:0 auto; padding:4px 12px 6px; border-bottom:1px solid var(--line)}
+  #topbar .tb-main{display:flex; gap:6px; align-items:center}
+  #topbar .tabs button{padding:7px 2px; font-size:12.5px}
+  #tbGear{width:38px; height:38px; border-radius:10px; border:1.5px solid var(--line); background:#fff; font-size:18px; flex-shrink:0}
+  #tbGear.on{background:var(--teal-soft); border-color:var(--teal)}
+  #topbar .toolbar{display:none; border-bottom:none; margin:0; padding:6px 0 0}
+  #topbar.open .toolbar{display:block}
+  #topbar .tb-row{margin-bottom:5px}
+  #topbar .speed{margin-top:0}
+  #topbar .speed input{height:24px}
   .tabs{display:flex; gap:5px; background:var(--paper); border-radius:10px; padding:4px; margin-bottom:10px}
   .tabs button{flex:1; padding:8px 2px; border-radius:8px; font-size:13.5px; font-weight:700; color:var(--ink-soft); white-space:nowrap}
   .tabs button.on{background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -216,6 +228,17 @@
   .speed b{color:var(--ink); min-width:40px; text-align:right; font-variant-numeric:tabular-nums}
   .cpane{display:none}
   .cpane .note{font-size:13px; color:var(--ink-soft); margin-bottom:8px}
+  #recBanner{position:fixed; left:50%; transform:translateX(-50%); top:60px; z-index:60; display:none;
+    min-width:240px; max-width:92vw; padding:10px 16px; border-radius:14px; font-weight:800; font-size:15px;
+    box-shadow:0 6px 18px rgba(0,0,0,.18); text-align:center}
+  #recBanner.on{display:block}
+  #recBanner.prep{background:#FFF4D6; color:#8A5B00; border:1.5px solid #EAD9B0}
+  #recBanner.go{background:#FDE7E4; color:#B23A2F; border:1.5px solid #F0B9B2}
+  #recBanner.judge{background:var(--teal-soft); color:var(--teal); border:1.5px solid #B9DDD6}
+  #recBanner .dot{display:inline-block; width:10px; height:10px; border-radius:50%; background:currentColor; margin-right:6px; vertical-align:middle}
+  #recBanner .dot.live{animation:blink .9s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  #recBanner .live-text{font-weight:500; font-size:14px; margin-top:4px; color:var(--ink); font-family:var(--reading); font-style:italic; min-height:18px}
   #interim{font-size:14px; color:var(--ink-soft); min-height:20px; margin-top:8px;
     font-family:var(--reading); font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 
@@ -543,6 +566,35 @@
     <button class="back-btn" id="backRead">‹ もどる</button>
     <h1 id="rTitle"></h1>
   </header>
+  <!-- 上部ツールバー(1行。⚙で詳細を開閉) -->
+  <div id="topbar">
+    <div class="tb-main">
+      <div class="tabs" style="margin:0; flex:1">
+        <button id="tabListen" class="on">🔊聞く</button>
+        <button id="tabRead">🎤音読</button>
+        <button id="tabCb">🎧くらべ</button>
+        <button id="tabRp">🎭ロール</button>
+        <button id="tabSh">👥シャドー</button>
+      </div>
+      <button id="tbGear" title="速さ・訳・マスク・読み方">⚙</button>
+    </div>
+    <div class="toolbar" id="tbDetail">
+      <div class="tb-row">
+        <button class="chip" id="repBtn">🔁 くり返し</button>
+        <button class="chip" id="jpBtn">訳</button>
+        <button class="chip" id="maskBtn">🙈 マスク 0%</button>
+        <span class="tb-sep"></span>
+        <span class="tb-lbl">読み方</span>
+        <button class="chip on" id="rbNone">なし</button>
+        <button class="chip" id="rbKana">カナ</button>
+        <button class="chip" id="rbIpa">記号</button>
+      </div>
+      <div class="tb-row speed" style="margin-top:2px">
+        <span>はやさ</span><input type="range" id="rate" min="0.5" max="1.5" step="0.1" value="0.9"><b id="rateVal">0.9x</b>
+        <span>ポーズ</span><input type="range" id="pauseS" min="0.3" max="3" step="0.1" value="0.6" style="max-width:80px"><b id="pauseVal">0.6s</b>
+      </div>
+    </div>
+  </div>
   <div class="sheet">
     <p class="hint" id="hint"></p>
     <div id="heardAll"></div>
@@ -550,31 +602,6 @@
   </div>
 </div>
 <div id="ctrl">
-  <div class="tabs">
-    <button id="tabListen" class="on">🔊聞く</button>
-    <button id="tabRead">🎤音読</button>
-    <button id="tabCb">🎧くらべ</button>
-    <button id="tabRp">🎭ロール</button>
-    <button id="tabSh">👥シャドー</button>
-  </div>
-  <!-- 共通ツールバー(どのタブでも同じ場所) -->
-  <div class="toolbar">
-    <div class="tb-row">
-      <button class="chip" id="repBtn" title="くり返し">🔁 くり返し</button>
-      <button class="chip" id="jpBtn">訳</button>
-      <button class="chip" id="maskBtn">🙈 マスク 0%</button>
-      <span class="tb-sep"></span>
-      <span class="tb-lbl">読み方</span>
-      <button class="chip on" id="rbNone">なし</button>
-      <button class="chip" id="rbKana">カナ</button>
-      <button class="chip" id="rbIpa">記号</button>
-    </div>
-    <div class="tb-row speed">
-      <span>はやさ</span><input type="range" id="rate" min="0.5" max="1.5" step="0.1" value="0.9"><b id="rateVal">0.9x</b>
-      <span>ポーズ</span><input type="range" id="pauseS" min="0.3" max="3" step="0.1" value="0.6" style="max-width:80px"><b id="pauseVal">0.6s</b>
-    </div>
-  </div>
-
   <div class="cpane" id="listenPane" style="display:block">
     <div class="row">
       <button class="big" id="playBtn">▶ さいしょから再生</button>
@@ -965,6 +992,51 @@ function getRec(){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SR) return null;
   const r=new SR(); r.lang='en-US'; r.interimResults=true; r.continuous=false; r.maxAlternatives=1;
+  return r;
+}
+/* ---- 録音の合図(音+画面) ---- */
+let _ac=null;
+function beep(freq, ms, vol){
+  try{
+    _ac=_ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(_ac.state==='suspended') _ac.resume();
+    const o=_ac.createOscillator(), g=_ac.createGain();
+    o.type='sine'; o.frequency.value=freq||880; g.gain.value=vol||0.12;
+    o.connect(g); g.connect(_ac.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.0001, _ac.currentTime+(ms||120)/1000); o.stop(_ac.currentTime+(ms||120)/1000+0.02);
+  }catch(e){}
+}
+function beepGo(){ beep(660,90); setTimeout(()=>beep(990,140),110); } // ピポッ=話してOK
+function beepEnd(){ beep(520,110); }
+/* 画面上部の録音バナー: state = 'prep' | 'go' | 'judge' | '' */
+function recBanner(state, text){
+  let b=$('recBanner');
+  if(!b){ b=document.createElement('div'); b.id='recBanner'; document.body.appendChild(b); }
+  if(!state){ b.className=''; b.innerHTML=''; return; }
+  b.className='on '+state;
+  b.innerHTML = state==='prep' ? '<span class="dot"></span> マイク準備中… まだ話さないで'
+    : state==='go' ? '<span class="dot live"></span> 🔴 話してOK!<div class="live-text" id="recLive">'+esc(text||'')+'</div>'
+    : '<span class="dot"></span> 判定中…';
+}
+function recLive(t){ const el=$('recLive'); if(el) el.textContent=t||''; }
+/* 認識器に「開始合図→ライブ表示→終了合図」を付ける共通ラッパー */
+function armRec(r, opts){
+  opts=opts||{};
+  let started=false, txt='';
+  recBanner('prep');
+  r.onstart=()=>{ started=true; beepGo(); recBanner('go',''); if(navigator.vibrate) navigator.vibrate(40); if(opts.onstart) opts.onstart(); };
+  r.onaudiostart=()=>{ if(!started){ started=true; beepGo(); recBanner('go',''); } };
+  const userResult=r.onresult;
+  r.onresult=e=>{
+    let interim=''; txt='';
+    for(let i=0;i<e.results.length;i++){ if(e.results[i].isFinal) txt+=e.results[i][0].transcript+' '; else interim+=e.results[i][0].transcript; }
+    recLive((txt+interim).trim().slice(-90));
+    if(userResult) userResult.call(r,e);
+  };
+  const userEnd=r.onend;
+  r.onend=()=>{ recBanner(''); if(started) beepEnd(); if(userEnd) userEnd.call(r); };
+  const userErr=r.onerror;
+  r.onerror=e=>{ recBanner(''); if(userErr) userErr.call(r,e); };
   return r;
 }
 
@@ -1384,7 +1456,8 @@ $('chatMic').onclick=()=>{
     $('chatMic').classList.remove('rec'); $('chatMic').textContent='🎤';
     if($('chatTa').value.trim()) $('chatTa').focus();
   };
-  try{ chatRec.start(); toast('🎤 英語で話してみよう(もう一度おすと終了)',2000); }catch(e){ chatRec=null; }
+  armRec(chatRec);
+  try{ chatRec.start(); }catch(e){ chatRec=null; recBanner(''); }
 };
 
 function latestRec(task){
@@ -2049,13 +2122,14 @@ function instSpeakPhase(){
     };
     r.onresult=e=>{
       if(!t0) t0=Date.now(); t1=Date.now();
-      for(let k=e.resultIndex;k<e.results.length;k++)
-        if(e.results[k].isFinal) txt+=e.results[k][0].transcript+' ';
+      txt='';
+      for(let k=0;k<e.results.length;k++) if(e.results[k].isFinal) txt+=e.results[k][0].transcript+' ';
     };
     r.onerror=()=>{};
     r.onend=fin;
-    try{ r.start(); }catch(e){ fin(); }
-    setTimeout(()=>{ try{r.stop();}catch(e){} },10000);
+    armRec(r,{onstart:()=>{ $('inStatus').textContent='🔴 いま英語で言おう!'; setTimeout(()=>{ try{r.stop();}catch(e){} },10000); }});
+    $('inStatus').textContent='マイク準備中…';
+    try{ r.start(); }catch(e){ recBanner(''); fin(); }
   }else{
     // マイクなし:声に出して言ってから、自己判定
     $('inStatus').textContent='声に出して言ってみよう(答えを見て自己チェック)';
@@ -2667,8 +2741,10 @@ function setReadMode(m){
   else if(m==='read'){ setScope(oralScope); }
   else if(m==='cb'){ unpick(); cbUpdate(); $('hint').textContent='くらべ聞き:文をタップ→録音→「お手本→自分の声」で聞きくらべ。thやr/lの音のちがいを耳でチェックしよう。'; }
   else if(m==='rp'){ renderRoles(); $('hint').textContent='自分の役をえらんでスタート。自分の番は紫の線が付いた文を読もう。'; }
-  else if(m==='sh'){ $('hint').textContent='お手本の直後にまねして読もう。'+(recSupported()?'採点ありだと自動でマイクが入ります。':''); }
+  else if(m==='sh'){ $('hint').textContent='お手本のあと「ピポッ♪」+赤い表示が出たら、まねして読もう。'+(recSupported()?'':'(この端末は採点なし)'); }
 }
+$('tbGear').onclick=()=>{ const o=!$('topbar').classList.contains('open'); $('topbar').classList.toggle('open',o); $('tbGear').classList.toggle('on',o); lsSet('eig_tb', o?'1':'0'); };
+if(lsGet('eig_tb')==='1'){ $('topbar').classList.add('open'); $('tbGear').classList.add('on'); }
 $('tabListen').onclick=()=>setReadMode('listen');
 $('tabRead').onclick=()=>setReadMode('read');
 $('tabCb').onclick=()=>setReadMode('cb');
@@ -2705,6 +2781,7 @@ $('cbRecBtn').onclick=()=>{
     cbRec=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
     cbRec.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
     cbRec.onstop=()=>{
+      recBanner(''); beepEnd();
       stream.getTracks().forEach(t=>t.stop());
       $('cbRecBtn').textContent='⏺ 自分の声を録音';
       const blob=new Blob(chunks,{type:cbRec.mimeType||mime||'audio/mp4'});
@@ -2716,9 +2793,9 @@ $('cbRecBtn').onclick=()=>{
       cbCompare(); // 録音後すぐ聞きくらべ
     };
     cbRec.start();
-    speak('', null); synth.cancel();
+    synth.cancel();
+    beepGo(); recBanner('go','録音中:文を読んだら もう一度ボタン');
     $('cbRecBtn').textContent='■ 録音中… おして終了';
-    toast('録音中:文を読んだらもう一度ボタン',2000);
   }).catch(()=>toast('マイクを使えませんでした。許可を確認してください',3000));
 };
 $('cbPlayBtn').onclick=()=>cbCompare();
@@ -2819,13 +2896,14 @@ function startRec(){
         try{ spin(); return; }catch(err){}
       }
       recOn=false; recWant=false; updateMic();
-      if(!finalText.trim()) return;
+      if(!finalText.trim()){ toast('声が聞き取れませんでした。ピポッ♪ の合図のあとに話してね',2500); return; }
       const dur=(t1>t0)?(t1-t0):0;
       if(oralScope==='all') gradeAll(finalText, dur);
       else if(pickedIdx>=0) grade(pickedIdx, finalText, dur);
     };
+    armRec(rec);
     try{ rec.start(); recOn=true; updateMic(); }
-    catch(err){ recWant=false; recOn=false; updateMic(); toast('マイクを起動できませんでした'); }
+    catch(err){ recWant=false; recOn=false; updateMic(); recBanner(''); toast('マイクを起動できませんでした'); }
   };
   $('interim').textContent='';
   spin();
@@ -3036,20 +3114,20 @@ function autoRecFor(i, done){
   if(!r){ done(); return; }
   clearSentMarks(i);
   autoRecObj=r;
-  let txt='', finished=false, t0=0, t1=0;
-  const fin=()=>{ if(finished) return; finished=true; autoRecObj=null;
-    if(txt.trim()) grade(i, txt, (t1>t0)?(t1-t0):0); done(); };
+  let txt='', finished=false, t0=0, t1=0, killer=null;
+  const fin=()=>{ if(finished) return; finished=true; autoRecObj=null; clearTimeout(killer);
+    if(txt.trim()) grade(i, txt, (t1>t0)?(t1-t0):0); else toast('聞き取れませんでした。合図のあとに話してね',2000);
+    done(); };
   r.onresult=e=>{
     if(!t0) t0=Date.now();
     t1=Date.now();
-    for(let k=e.resultIndex;k<e.results.length;k++)
-      if(e.results[k].isFinal) txt+=e.results[k][0].transcript+' ';
+    txt='';
+    for(let k=0;k<e.results.length;k++) if(e.results[k].isFinal) txt+=e.results[k][0].transcript+' ';
   };
   r.onerror=()=>{};
   r.onend=fin;
-  try{ r.start(); }catch(e){ fin(); }
-  // 保険:長すぎたら打ち切り
-  setTimeout(()=>{ try{ r.stop(); }catch(e){} }, 12000);
+  armRec(r,{onstart:()=>{ killer=setTimeout(()=>{ try{ r.stop(); }catch(e){} }, 12000); }});
+  try{ r.start(); }catch(e){ recBanner(''); fin(); }
 }
 function stopAutoRec(){ if(autoRecObj){ try{autoRecObj.abort();}catch(e){} autoRecObj=null; } }
 function stopSeq(){
