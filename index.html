@@ -1711,22 +1711,19 @@ function renderHW(){
 function bestMap(){ try{ return JSON.parse(lsGet('eig_best')||'{}'); }catch(e){ return {}; } }
 function renderRead(){
   const el=$('pane-read');
-  const levels=['すべて',...new Set(DATA.passages.map(p=>p.level))];
-  const cats=['すべて',...new Set(DATA.passages.map(p=>p.category).filter(Boolean))];
-  let html='<div class="chips">'+levels.map(l=>`<button class="chip lvc ${l===levelFilter?'on':''}" data-l="${escA(l)}">${esc(l)}</button>`).join('')+'</div>';
-  if(cats.length>2) html+='<div class="chips" style="padding-top:0">'+cats.map(c=>`<button class="chip ctc ${c===catFilter?'on':''}" data-c="${escA(c)}">${esc(c)}</button>`).join('')+'</div>';
+  const units=['すべて',...unitList().filter(Boolean)];
+  let html='<div class="chips">'+units.map(u=>`<button class="chip lvc ${u===levelFilter?'on':''}" data-l="${escA(u)}">${esc(u)}</button>`).join('')+'</div>';
   const B=bestMap();
-  const shown=DATA.passages.filter(p=>(levelFilter==='すべて'||p.level===levelFilter)&&(catFilter==='すべて'||p.category===catFilter));
+  const shown=DATA.passages.filter(p=>(levelFilter==='すべて'||(p.unit||p.level)===levelFilter));
   html+=shown.length
     ? '<div class="cards-grid">'+shown.map(p=>`
       <button class="item ps" data-id="${p.id}">
-        <span class="meta"><span class="lv" data-lv="${escA(p.level)}">${esc(p.level)}</span><span class="cat">${esc(p.category)}</span>${B[p.title]?`<span class="best">🏅${B[p.title]}%</span>`:''}</span>
+        <span class="meta"><span class="cat">${esc(p.unit||'')}${p.part?' ・ '+esc(p.part):''}</span>${B[p.title]?`<span class="best">🏅${B[p.title]}%</span>`:''}</span>
         <h2>${esc(p.title)}</h2><span class="preview">${esc(p.text)}</span>
       </button>`).join('')+'</div>'
     : '<div class="empty">この条件の教材はありません。</div>';
   el.innerHTML=html;
   el.querySelectorAll('.lvc').forEach(c=>c.onclick=()=>{ levelFilter=c.dataset.l; renderRead(); });
-  el.querySelectorAll('.ctc').forEach(c=>c.onclick=()=>{ catFilter=c.dataset.c; renderRead(); });
   el.querySelectorAll('.ps').forEach(b=>b.onclick=()=>openPassage(DATA.passages.find(p=>p.id==b.dataset.id), null));
 }
 
