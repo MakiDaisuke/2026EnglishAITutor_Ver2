@@ -203,7 +203,9 @@
   #topbar{position:sticky; top:52px; z-index:19; background:var(--paper); max-width:560px; margin:0 auto; padding:4px 12px 6px; border-bottom:1px solid var(--line)}
   #topbar .tb-main{display:flex; gap:6px; align-items:center}
   #topbar .tabs button{padding:7px 2px; font-size:12.5px}
-  #tbGear{width:38px; height:38px; border-radius:10px; border:1.5px solid var(--line); background:#fff; font-size:18px; flex-shrink:0}
+  #tbGear,#playBtn{width:38px; height:38px; border-radius:10px; border:1.5px solid var(--line); background:#fff; font-size:18px; flex-shrink:0}
+  #playBtn{background:var(--teal); color:#fff; border-color:var(--teal); font-size:16px}
+  #playBtn.stop{background:var(--miss); border-color:var(--miss)}
   #tbGear.on{background:var(--teal-soft); border-color:var(--teal)}
   #topbar .toolbar{display:none; border-bottom:none; margin:0; padding:6px 0 0}
   #topbar.open .toolbar{display:block}
@@ -571,11 +573,12 @@
     <div class="tb-main">
       <div class="tabs" style="margin:0; flex:1">
         <button id="tabListen" class="on">🔊聞く</button>
+        <button id="tabSh">👥シャドー</button>
         <button id="tabRead">🎤音読</button>
         <button id="tabCb">🎧くらべ</button>
         <button id="tabRp">🎭ロール</button>
-        <button id="tabSh">👥シャドー</button>
       </div>
+      <button id="playBtn" title="さいしょから再生">▶</button>
       <button id="tbGear" title="速さ・訳・マスク・読み方">⚙</button>
     </div>
     <div class="toolbar" id="tbDetail">
@@ -602,11 +605,7 @@
   </div>
 </div>
 <div id="ctrl">
-  <div class="cpane" id="listenPane" style="display:block">
-    <div class="row">
-      <button class="big" id="playBtn">▶ さいしょから再生</button>
-    </div>
-  </div>
+  <div class="cpane" id="listenPane" style="display:block"></div>
 
   <div class="cpane" id="recPane">
     <div class="tabs" style="margin-bottom:8px">
@@ -876,7 +875,7 @@ function dstr(d){ return d.getFullYear()+'/'+pad2(d.getMonth()+1)+'/'+pad2(d.get
 function show(id){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
   $(id).classList.add('on');
-  $('ctrl').style.display = (id==='readView') ? 'block' : 'none';
+  $('ctrl').style.display = (id==='readView' && mode!=='listen') ? 'block' : 'none';
   const home = (id==='homeView');
   $('navBar').style.display = (home && !TKEY) ? 'flex' : 'none';
   if(!home) $('chatInput').classList.remove('on');
@@ -1169,6 +1168,8 @@ function openMySettings(){
     <button class="big" id="msPw" style="width:100%">パスワードを変更</button>
     <div class="field" style="text-align:left; margin-top:14px"><label>🔊 読み上げの速さ: <b id="msSpdV">${SPD().toFixed(1)}x</b></label>
       <input id="msSpd" type="range" min="0.5" max="1.4" step="0.1" value="${SPD()}" style="width:100%"></div>
+    <div class="field" style="text-align:left"><label>⚡ 瞬間英作文の考える時間: <b id="msInstV">${instSec()}秒</b>(先生の設定: ${(DATA.tutor&&DATA.tutor.instSec)||8}秒)</label>
+      <input id="msInst" type="range" min="3" max="20" step="1" value="${instSec()}" style="width:100%"></div>
     <div class="sub-row" style="margin-top:14px">
       <button class="ghost" id="msOut" style="flex:1">ログアウト</button>
       <button class="big" id="msClose">とじる</button>
@@ -1177,6 +1178,7 @@ function openMySettings(){
   $('msClose').onclick=()=>$('nameGate').classList.remove('on');
   $('msOut').onclick=()=>{ if(confirm('ログアウトしますか?')) logout(); };
   $('msSpd').oninput=()=>{ lsSet('eig_spd',$('msSpd').value); $('msSpdV').textContent=(+$('msSpd').value).toFixed(1)+'x'; };
+  $('msInst').oninput=()=>{ lsSet('eig_inst',$('msInst').value); $('msInstV').textContent=$('msInst').value+'秒'; };
   $('msPw').onclick=()=>{
     const o=$('msOld').value.trim(), n=$('msNew').value.trim();
     if(!/^[0-9A-Za-z]{4,12}$/.test(n)){ toast('4〜12文字の英数字にしてね'); return; }
@@ -1375,7 +1377,7 @@ function renderTalk(){
   html+='</div>';
   el.innerHTML=html;
   el.querySelectorAll('.talk-modes button').forEach(b=>b.onclick=()=>{
-    if(b.dataset.m==='gpt'){ window.open('https://chatgpt.com/', '_blank'); return; }
+    if(b.dataset.m==='gpt'){ window.open((DATA.tutor&&DATA.tutor.gptUrl)||'https://chatgpt.com/', '_blank'); return; }
     talkMode=b.dataset.m; chatImgClear(); renderTalk();
     $('chatCam').style.display = talkMode==='作文' ? 'inline-flex' : 'none';
     $('chatTa').placeholder = talkMode==='作文' ? '英作文をここに貼る(または📷で写真)' : '英語で話してみよう(日本語でもOK)';
@@ -1507,7 +1509,6 @@ function renderHomeTab(){
     +'<button data-go="read"><span>🎤</span>音読・スピーク</button>'
     +'<button data-go="drill"><span>✏️</span>問題ドリル</button>'
     +'<button data-go="word"><span>🃏</span>単語カード</button>'
-    +'<button data-go="inst"><span>⚡</span>瞬間英作文</button>'
     +(DATA.tutor&&DATA.tutor.chatOn?'<button data-go="talk"><span>💬</span>AIトーク</button>':'')
     +(wq+wl>0?`<button data-go="weak"><span>🔁</span>にがて復習(${wq+wl})</button>`:'')
     +'</div>';
@@ -2027,6 +2028,7 @@ $('dCheck').onclick=()=>{
 $('dNext').onclick=()=>{ DK.idx++; drawDict(); };
 $('dIn').addEventListener('keydown', e=>{ if(e.key==='Enter'&&!DK.answered) $('dCheck').click(); });
 
+function instSec(){ const s=parseFloat(lsGet('eig_inst')||''); if(s>=3&&s<=30) return s; const t=parseFloat(DATA.tutor&&DATA.tutor.instSec); return (t>=3&&t<=30)?t:8; }
 /* ---- 瞬間英作文 Unitピッカー(複数選択可) ---- */
 let instPick=new Set();
 function instantUnits(){
@@ -2097,9 +2099,9 @@ function drawInst(){
   $('inSelfRow').style.display='none';
   $('inNext').style.display='none'; $('inPass').style.display='block';
   $('inStatus').className='inst-status';
-  $('inStatus').textContent='10秒で英語にしよう…';
+  $('inStatus').textContent=instSec()+'秒で英語にしよう…';
   $('inHint').style.display='block'; $('inHint').disabled=false;
-  const t0=Date.now(), thinkMs=10000;
+  const t0=Date.now(), thinkMs=instSec()*1000;
   $('inCd').style.width='100%';
   IN.timer=setInterval(()=>{
     if(!$('instView').classList.contains('on')){ inClearTimer(); return; }
@@ -2606,7 +2608,7 @@ function playOne(i){
   go();
 }
 function playAll(){
-  playing=true; $('playBtn').textContent='■ とめる'; $('playBtn').classList.add('stop');
+  playing=true; $('playBtn').textContent='■'; $('playBtn').classList.add('stop');
   const step=i=>{
     if(!playing||i>=sents.length){ stopAll(); return; }
     playIdx=i; markSent(i);
@@ -2620,7 +2622,7 @@ function playAll(){
 }
 function stopAll(){
   playing=false; playIdx=-1; synth.cancel(); markSent(-1);
-  $('playBtn').textContent='▶ さいしょから再生'; $('playBtn').classList.remove('stop');
+  $('playBtn').textContent='▶'; $('playBtn').classList.remove('stop');
 }
 function stopEverything(){ stopAll(); stopRec(); stopSeq(); if(typeof cbStop==='function') cbStop(); }
 $('playBtn').onclick=()=>{ playing?stopAll():playAll(); };
@@ -2729,6 +2731,7 @@ function applyMask(){
 /* ---- タブ切替 ---- */
 function setReadMode(m){
   mode=m; stopEverything(); cbStop();
+  $('ctrl').style.display = (m==='listen') ? 'none' : 'block';
   [['tabListen','listen'],['tabRead','read'],['tabCb','cb'],['tabRp','rp'],['tabSh','sh']].forEach(([id,k])=>{
     $(id).classList.toggle('on',m===k);
   });
@@ -2826,8 +2829,8 @@ function setScope(s){
   unpick();
   if(s==='all'){
     $('micBtn').disabled=false;
-    $('recNote').textContent='マイクをおして、さいしょから最後まで通して読もう。読み終わったらもう一度おして終了。';
-    $('hint').textContent='全文まとめてモード:マイクをおして通し読み。終了すると文ごとに採点されます。';
+    $('recNote').textContent='マイクをおすと、1文ずつ「ピポッ♪」の合図で自動的に進みます。合図が出たらその文を読んでね。';
+    $('hint').textContent='全文モード:文ごとに合図→読む、が自動で最後まで進みます。とちゅうでやめるときはもう一度マイク。';
   }else{
     $('hint').textContent='読みたい文をタップして選び、マイクをおして音読しよう。';
   }
@@ -2857,10 +2860,29 @@ function clearSentMarks(i){
   });
   if(i==null){ $('heardAll').classList.remove('show'); $('heardAll').innerHTML=''; }
 }
+/* 全文モード:1文ずつ「合図→読む→次の文」を自動で進める(長い連続録音は途中で切れる仕様のため) */
+let allOn=false, allIdx=0;
+function startAllRun(){
+  allOn=true; allIdx=0; recOn=true; updateMic();
+  clearSentMarks(null); oralScores={};
+  const step=()=>{
+    if(!allOn) return;
+    if(allIdx>=sents.length){ stopAllRun(true); return; }
+    markSent(allIdx);
+    const el=$('sents').querySelector(`.sent[data-i="${allIdx}"]`); if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+    autoRecFor(allIdx, ()=>{ if(!allOn) return; allIdx++; setTimeout(step, 350); });
+  };
+  step();
+}
+function stopAllRun(finished){
+  allOn=false; stopAutoRec(); markSent(-1); recOn=false; updateMic();
+  if(finished){ const avg=oralAvg(); toast('✓ 通し読み おつかれさま!'+(avg?` 平均 ${avg}%`:''),3000); }
+}
 function startRec(){
   if(oralScope==='sent'&&pickedIdx<0) return;
   if(!recSupported()){ toast('この端末・ブラウザでは音声認識が使えません(Safari推奨)'); return; }
   stopAll();
+  if(oralScope==='all'){ if(allOn) stopAllRun(false); else startAllRun(); return; }
   // 前回の採点表示をリセットしてから録音
   if(oralScope==='sent') clearSentMarks(pickedIdx); else clearSentMarks(null);
   recWant=true;
@@ -2909,13 +2931,13 @@ function startRec(){
   spin();
 }
 function stopRec(){
-  recWant=false;
+  recWant=false; if(allOn) stopAllRun(false);
   if(rec){ try{rec.stop();}catch(e){} rec=null; }
   recOn=false; updateMic();
 }
 function updateMic(){
   const b=$('micBtn');
-  b.textContent=recOn?'● きろく中… もう一度おして終了':'🎤 マイクをおして読む';
+  b.textContent=recOn?(oralScope==='all'?'■ とめる(1文ずつ自動で進行中)':'● きろく中… もう一度おして終了'):(oralScope==='all'?'🎤 全文を1文ずつ読む(自動で進む)':'🎤 マイクをおして読む');
   b.classList.toggle('rec',recOn);
 }
 $('micBtn').onclick=()=>{ recOn?stopRec():startRec(); };
@@ -3426,12 +3448,13 @@ function renderContent(){
     if(!Object.keys(sets).length) html+='<div class="empty">問題がまだありません</div>';
     return html;
   }
-  if(tSheet==='問題集'&&tQSet) html+=`<button class="chip" id="qsetBack" style="margin-bottom:10px">‹ セット一覧へ</button><div class="dash-sec" style="margin-top:0">📚 ${esc(tQSet)}</div>`;
+  if(tSheet==='問題集'&&tQSet) html+=`<button class="chip" id="qsetBack" style="margin-bottom:10px">‹ セット一覧へ</button> <button class="chip" id="qsetDel" style="color:var(--miss); border-color:var(--miss)">🗑 このセットを全部削除</button><div class="dash-sec" style="margin-top:0">📚 ${esc(tQSet)}</div>`;
+  if(tSheet!=='発音'&&tSheet!=='セリフ'&&!(tSheet==='問題集'&&!tQSet)) html+='<p class="thelp">Unit見出しの「🗑」でそのUnitのデータをまとめて削除できます</p>';
   // Unitでグループ表示
   const rows=tData();
   const byU={}; rows.forEach(d=>{ const u=(tSheet==='発音'||tSheet==='セリフ')?'':String(d.v[0]||'その他'); (byU[u]=byU[u]||[]).push(d); });
   Object.keys(byU).forEach(u=>{
-    if(u) html+=`<div class="dash-sec">${esc(u)} <span style="font-weight:500; color:var(--ink-soft); font-size:12px">${byU[u].length}件</span> ${tSheet==='教材'?`<button class="chip hwquick" data-type="音読" data-target="${escA(u)}" style="padding:4px 10px; font-size:12px">📌 音読の宿題に</button>`:''}</div>`;
+    if(u) html+=`<div class="dash-sec">${esc(u)} <span style="font-weight:500; color:var(--ink-soft); font-size:12px">${byU[u].length}件</span> ${tSheet==='教材'?`<button class="chip hwquick" data-type="音読" data-target="${escA(u)}" style="padding:4px 10px; font-size:12px">📌 音読の宿題に</button>`:''} <button class="chip udel" data-u="${escA(u)}" style="padding:4px 10px; font-size:12px; color:var(--miss); border-color:var(--miss)">🗑</button></div>`;
     html+='<div class="cards-grid">'+byU[u].map(d=>{
       const main = tSheet==='教材'?d.v[2] : tSheet==='単語帳'?d.v[1]+' — '+d.v[2] : tSheet==='問題集'?d.v[3] : tSheet==='瞬間英作文'?d.v[1]+' → '+d.v[2] : tSheet==='発音'?d.v[0]+' '+d.v[1]+' '+d.v[2] : d.v[0]+': '+d.v[1];
       return `<button class="item titem" data-sheet="${tSheet}" data-id="${d.id}"><h2 style="font-size:15px">${esc(String(main).slice(0,70))}</h2></button>`; }).join('')+'</div>';
@@ -3497,6 +3520,8 @@ function renderSettings(){
   <div class="field"><label>APIキー(変更時のみ入力)</label><input id="st_key" type="password" placeholder="sk-…"></div>
   <div class="field"><label>Day1 会話プロンプト</label><textarea id="st_prompt" style="min-height:160px; font-size:13px">${esc(s.prompt)}</textarea></div>
   <div class="field"><label>Day2 作文添削プロンプト</label><textarea id="st_prompt2" style="min-height:160px; font-size:13px">${esc(s.prompt2||'')}</textarea></div>
+  <div class="field"><label>Day3 ChatGPTリンク(生徒が「Day 3」を押すと開くURL)</label><input id="st_gpt" value="${escA(s.gptUrl||'')}" placeholder="https://chatgpt.com/g/…"></div>
+  <div class="field"><label>⚡ 瞬間英作文の考える時間(秒・生徒側で変更も可)</label><input id="st_inst" type="number" min="3" max="30" value="${escA(String(s.instSec||8))}"></div>
   <button class="chip" id="stTest">📡 AI接続テスト</button> <button class="chip" id="stGenPron">🔤 読み方を自動生成(発音シート)</button>
   </details>
   <details><summary class="dash-sec" style="cursor:pointer">🗓 年度・パスコード</summary>
@@ -3513,7 +3538,7 @@ function renderSettings(){
   <p style="font-size:11px; color:var(--ink-soft); margin-top:16px; text-align:center">English AI Tutor v${APP_VER}<br>© Maki Daisuke / 愛媛大学教育学部附属中学校</p>`;
 }
 function saveSettingsUI(){
-  const items={'チューター名':$('st_name').value.trim()||'ピコ','チューター画像URL':$('st_img').value.trim(),'チャット機能':$('st_chat').value,'チャットモデル':$('st_model').value,'OpenAI APIキー':$('st_key').value.trim(),'チャットプロンプト':$('st_prompt').value,'ライティングプロンプト':$('st_prompt2').value,'年度':$('st_year').value.trim()};
+  const items={'チューター名':$('st_name').value.trim()||'ピコ','チューター画像URL':$('st_img').value.trim(),'チャット機能':$('st_chat').value,'チャットモデル':$('st_model').value,'OpenAI APIキー':$('st_key').value.trim(),'チャットプロンプト':$('st_prompt').value,'ライティングプロンプト':$('st_prompt2').value,'年度':$('st_year').value.trim(),'ChatGPTリンク':$('st_gpt').value.trim(),'瞬間英作文秒数':$('st_inst').value.trim()};
   const np=$('st_pass').value.trim(); if(np) items['教員パスコード']=np;
   $('stSave').disabled=true;
   apiPost({action:'settings', key:TKEY, items:items}, (ok,err)=>{
@@ -3655,6 +3680,8 @@ function wireTeacher(el){
   if(q('stPrint')) q('stPrint').onclick=()=>printStudent(tStudent);
   if(q('hwBack')) q('hwBack').onclick=()=>{ tHw=null; renderTeacher(); };
   if(q('qsetBack')) q('qsetBack').onclick=()=>{ tQSet=null; renderTeacher(); };
+  if(q('qsetDel')) q('qsetDel').onclick=()=>{ if(!confirm('セット「'+tQSet+'」の問題をすべて削除します。よいですか?')) return; apiPost({action:'deletewhere', key:TKEY, sheet:'問題集', col:1, value:tQSet}, (ok,err,r)=>{ if(ok){ toast('✓ '+(r.count||0)+'件を削除'); tQSet=null; load(); } else toast(err||'削除に失敗'); }); };
+  el.querySelectorAll('.udel').forEach(b=>b.onclick=()=>{ const u=b.dataset.u; if(!confirm('「'+tSheet+'」の '+u+' のデータをすべて削除します。よいですか?')) return; apiPost({action:'deletewhere', key:TKEY, sheet:tSheet, col:0, value:u}, (ok,err,r)=>{ if(ok){ toast('✓ '+(r.count||0)+'件を削除'); load(); } else toast(err||'削除に失敗'); }); });
   if(q('hwWizBtn')) q('hwWizBtn').onclick=openHwWizard;
   if(q('liveBtn')) q('liveBtn').onclick=openLive;
   if(q('genUnitBtn')) q('genUnitBtn').onclick=openGenUnit;
