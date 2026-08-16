@@ -144,7 +144,7 @@
   .inst-status.rec{color:var(--miss)}
 
   /* ---- 本文(音読) ---- */
-  .sheet{padding:10px 16px 200px; max-width:560px; margin:0 auto; word-break:break-word}
+  .sheet{padding:10px 16px 120px; max-width:560px; margin:0 auto; word-break:break-word}
   .hint{font-size:13px; color:var(--ink-soft); padding:10px 2px 14px}
   .qr-link{display:inline-flex; align-items:center; gap:6px; margin:0 0 12px;
     padding:10px 16px; border-radius:12px; background:#EAF1FB; color:#2B5FA8;
@@ -194,11 +194,11 @@
   #heardAll.show{display:block}
   #heardAll b{color:var(--ink)}
 
-  #ctrl{position:fixed; left:0; right:0; bottom:0; z-index:30; display:none;
-    background:rgba(255,255,255,.96); backdrop-filter:blur(10px); border-top:1px solid var(--line);
-    padding:8px 16px calc(10px + env(safe-area-inset-bottom)); max-width:560px; margin:0 auto}
-  @media(min-width:600px){ #ctrl{border-radius:16px 16px 0 0; left:50%; transform:translateX(-50%); width:560px} }
+  #ctrl{display:none; padding:6px 0 2px; border-top:1px dashed var(--line); margin-top:4px}
   #ctrl .cpane .row{margin-bottom:0}
+  #ctrl .big{padding:11px 14px; font-size:15px}
+  #ctrl .note{margin-bottom:6px}
+  #ctrl .scope{margin-bottom:6px}
   /* 上部ツールバー */
   #topbar{position:sticky; top:52px; z-index:19; background:var(--paper); max-width:560px; margin:0 auto; padding:4px 12px 6px; border-bottom:1px solid var(--line)}
   #topbar .tb-main{display:flex; gap:6px; align-items:center}
@@ -402,7 +402,13 @@
   #chatPrev.on{display:flex}
   #chatPrev img{height:56px; border-radius:8px}
   #chatPrev span{flex:1; font-size:13px; color:var(--ink-soft)}
-  .quick{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+  details.pf{margin-top:16px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:4px 14px}
+  details.pf summary{cursor:pointer; font-weight:800; font-size:14.5px; padding:10px 0; list-style:none}
+  details.pf summary::-webkit-details-marker{display:none}
+  details.pf .pf-body{padding-bottom:10px}
+  .quick{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+  .quick button{padding:18px 6px; font-size:14px}
+  .quick button span{font-size:30px}
   .quick button{display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 6px; border-radius:14px; background:var(--card); border:1.5px solid var(--line); font-size:12.5px; font-weight:700; color:var(--ink)}
   .quick button span{font-size:24px}
   .quick button:active{background:var(--teal-soft); border-color:var(--teal)}
@@ -484,11 +490,11 @@
 <!-- AIトーク入力バー -->
 <div class="chat-input" id="chatInput">
   <button id="chatMic">🎤</button>
-  <button id="chatCam" style="display:none">📷</button>
+  <button id="chatCam" style="display:none" title="写真を撮る / えらぶ">📷</button>
   <textarea id="chatTa" rows="1" placeholder="英語で話してみよう(日本語でもOK)"></textarea>
   <button id="chatSend">➤</button>
 </div>
-<input type="file" id="chatFile" accept="image/*" capture="environment" style="display:none">
+<input type="file" id="chatFile" accept="image/*" style="display:none">
 <div id="chatPrev"><img id="chatPrevImg" alt=""><span>写真を添付中。メッセージ(なくてもOK)を入れて ➤</span><button class="ghost" id="chatPrevX" style="padding:6px 10px">×</button></div>
 
 <!-- 下部ナビ(生徒) -->
@@ -597,13 +603,6 @@
         <span>ポーズ</span><input type="range" id="pauseS" min="0.3" max="3" step="0.1" value="0.6" style="max-width:80px"><b id="pauseVal">0.6s</b>
       </div>
     </div>
-  </div>
-  <div class="sheet">
-    <p class="hint" id="hint"></p>
-    <div id="heardAll"></div>
-    <div id="sents"></div>
-  </div>
-</div>
 <div id="ctrl">
   <div class="cpane" id="listenPane" style="display:block"></div>
 
@@ -649,6 +648,13 @@
       <button class="big pp" id="shBtn">▶ シャドーイング開始</button>
       <button class="ghost on" id="shMicT">🎤 採点あり</button>
     </div>
+  </div>
+</div>
+  </div>
+  <div class="sheet">
+    <p class="hint" id="hint"></p>
+    <div id="heardAll"></div>
+    <div id="sents"></div>
   </div>
 </div>
 
@@ -1174,7 +1180,7 @@ function openMySettings(){
       <button class="ghost" id="msOut" style="flex:1">ログアウト</button>
       <button class="big" id="msClose">とじる</button>
     </div>
-    <p style="font-size:11px; color:var(--ink-soft); margin-top:14px">English AI Tutor v${APP_VER}<br>© Maki Daisuke / 愛媛大学教育学部附属中学校</p>`;
+    <p style="font-size:11px; color:var(--ink-soft); margin-top:14px">English AI Tutor v${APP_VER}<br>© 真木大輔(Maki Daisuke) / 愛媛大学教育学部附属中学校</p>`;
   $('msClose').onclick=()=>$('nameGate').classList.remove('on');
   $('msOut').onclick=()=>{ if(confirm('ログアウトしますか?')) logout(); };
   $('msSpd').oninput=()=>{ lsSet('eig_spd',$('msSpd').value); $('msSpdV').textContent=(+$('msSpd').value).toFixed(1)+'x'; };
@@ -1505,18 +1511,14 @@ function renderHomeTab(){
   const recs=DATA.records||[];
   const hwDone=DATA.homework.filter(h=>latestRec(h.task)).length;
   let html=missionHtml();
-  html+='<div class="dash-sec" style="margin-top:6px">なにをする?</div><div class="quick">'
+  html+='<div class="dash-sec" style="margin-top:6px; font-size:16px">きょうは なにをする?</div><div class="quick">'
     +'<button data-go="read"><span>🎤</span>音読・スピーク</button>'
     +'<button data-go="drill"><span>✏️</span>問題ドリル</button>'
     +'<button data-go="word"><span>🃏</span>単語カード</button>'
     +(DATA.tutor&&DATA.tutor.chatOn?'<button data-go="talk"><span>💬</span>AIトーク</button>':'')
     +(wq+wl>0?`<button data-go="weak"><span>🔁</span>にがて復習(${wq+wl})</button>`:'')
     +'</div>';
-  html+='<div class="home-stat">'
-    +`<div class="st"><b>${hwDone}/${DATA.homework.length}</b><span>宿題 提出</span></div>`
-    +`<div class="st"><b>${recs.length}</b><span>れんしゅう回数</span></div>`
-    +`<div class="st"><b>${wq+wl}</b><span>にがて</span></div>`
-    +'</div>';
+  html+=`<details class="pf" ${lsGet('eig_pf')==='1'?'open':''}><summary>📊 じぶんのきろく <span style="font-weight:500; color:var(--ink-soft)">宿題 ${hwDone}/${DATA.homework.length} ・ 練習 ${recs.length}回 ・ にがて ${wq+wl}</span></summary><div class="pf-body">`;
   html+=unitMapHtml();
   if(recs.length>=2){
     const vals=recs.slice(-15).map(r=>r.score);
@@ -1532,10 +1534,11 @@ function renderHomeTab(){
     html+='<div class="dash-sec">📄 さいきんのきろく</div>';
     html+=recs.slice(-5).reverse().map(r=>`<div class="feedline">${esc(r.date)} ${esc(r.task)} — <b>${r.score}%</b> <span style="font-size:12px">(${esc(r.type)})</span></div>`).join('');
   }
+  html+='</div></details>';
   html+='<button class="ghost" id="mySet" style="width:100%; margin-top:14px">⚙ じぶんの設定(パスワード・読み上げの速さ)</button>';
   html+=`<details style="margin-top:14px; font-size:14px"><summary style="color:var(--ink-soft); font-weight:700; cursor:pointer">❓ つかいかた</summary>
     <div style="line-height:1.8; padding:8px 4px; color:var(--ink)">${(DATA.help||[]).map(h=>`<b>${esc(h.t)}</b>:${esc(h.d)}<br>`).join('')||'先生が「使い方(生徒)」シートに書くとここに出ます'}</div></details>`;
-  html+=`<p style="font-size:11px; color:var(--ink-soft); margin-top:16px; text-align:center">English AI Tutor v${APP_VER}<br>© Maki Daisuke / 愛媛大学教育学部附属中学校</p>`;
+  html+=`<p style="font-size:11px; color:var(--ink-soft); margin-top:16px; text-align:center">English AI Tutor v${APP_VER}<br>© 真木大輔(Maki Daisuke) / 愛媛大学教育学部附属中学校</p>`;
   el.innerHTML=html;
   const mb=el.querySelector('#missionBtn');
   if(mb) mb.onclick=()=>{ const m=missionOf(); if(m) m.run(); };
@@ -1549,6 +1552,7 @@ function renderHomeTab(){
     else if(g==='weak'){ currentTask=null; if(qWeakPool().length) startQDrill(null,true,null,null); else startDrill('カード', weakList().map((c,i)=>({...c,id:'w'+i})), null); }
   });
   const ms=el.querySelector('#mySet'); if(ms) ms.onclick=openMySettings;
+  const pf=el.querySelector('details.pf'); if(pf) pf.addEventListener('toggle',()=>lsSet('eig_pf', pf.open?'1':'0'));
 }
 
 function renderQ(){
@@ -3429,7 +3433,7 @@ function renderStudent(sid){
 function printStudent(sid){
   const el=$('pane-teacher'); const w=window.open('','_blank');
   const s=(DATA.rosterFull||[]).find(x=>x.sid===sid)||{name:sid};
-  w.document.write(`<html><head><meta charset="utf-8"><title>${esc(s.name)} 個票</title><style>body{font-family:sans-serif; padding:24px; max-width:720px; margin:0 auto} h1{font-size:20px} .um-row{display:grid; grid-template-columns:90px repeat(5,1fr); gap:4px; font-size:12px; margin:2px 0} .um-c{text-align:center; padding:4px; border:1px solid #ccc; border-radius:4px} .um-1{background:#fde} .um-2{background:#ffe9b3} .um-3{background:#d3f0e6} .dash-sec{font-weight:700; margin:14px 0 6px} .feedline,.rankline,.followline{font-size:13px; padding:3px 0; border-bottom:1px dashed #ddd} .heat{display:grid; grid-template-columns:repeat(14,1fr); gap:3px; max-width:400px} .heat i{display:block; height:14px; background:#eee; border-radius:2px} .heat .h1{background:#9ED0C4} .heat .h2{background:#0E7568} .chip,button,.chat-box{display:none!important} svg{max-width:440px}</style></head><body><h1>English AI Tutor 学習の記録 — ${esc(s.name)}(${esc(s.cls||'')})</h1><p style="font-size:12px; color:#666">${dstr(new Date())} 出力 / ${esc(DATA.tutor.year||'')}年度</p>${el.innerHTML}<p style="font-size:11px; color:#888; margin-top:30px">English AI Tutor v${APP_VER} © Maki Daisuke / 愛媛大学教育学部附属中学校</p></body></html>`);
+  w.document.write(`<html><head><meta charset="utf-8"><title>${esc(s.name)} 個票</title><style>body{font-family:sans-serif; padding:24px; max-width:720px; margin:0 auto} h1{font-size:20px} .um-row{display:grid; grid-template-columns:90px repeat(5,1fr); gap:4px; font-size:12px; margin:2px 0} .um-c{text-align:center; padding:4px; border:1px solid #ccc; border-radius:4px} .um-1{background:#fde} .um-2{background:#ffe9b3} .um-3{background:#d3f0e6} .dash-sec{font-weight:700; margin:14px 0 6px} .feedline,.rankline,.followline{font-size:13px; padding:3px 0; border-bottom:1px dashed #ddd} .heat{display:grid; grid-template-columns:repeat(14,1fr); gap:3px; max-width:400px} .heat i{display:block; height:14px; background:#eee; border-radius:2px} .heat .h1{background:#9ED0C4} .heat .h2{background:#0E7568} .chip,button,.chat-box{display:none!important} svg{max-width:440px}</style></head><body><h1>English AI Tutor 学習の記録 — ${esc(s.name)}(${esc(s.cls||'')})</h1><p style="font-size:12px; color:#666">${dstr(new Date())} 出力 / ${esc(DATA.tutor.year||'')}年度</p>${el.innerHTML}<p style="font-size:11px; color:#888; margin-top:30px">English AI Tutor v${APP_VER} © 真木大輔(Maki Daisuke) / 愛媛大学教育学部附属中学校</p></body></html>`);
   w.document.close(); setTimeout(()=>{ try{w.print();}catch(e){} },500);
 }
 
@@ -3535,7 +3539,7 @@ function renderSettings(){
   <details><summary class="dash-sec" style="cursor:pointer">📖 使い方(教員)</summary><div style="font-size:14px; line-height:1.8">${(s.helpTeacher||[]).map(h=>`<b>${esc(h.t)}</b><br>${esc(h.d)}<br><br>`).join('')}</div>
   <p class="thelp">生徒向けは「使い方(生徒)」シートに書くと生徒ホームの「つかいかた」に出ます。週次メール: Apps Scriptで setupWeeklyTrigger を1回実行(宛先: ${esc(s.mail||'スクリプト所有者')})</p></details>
   <details><summary class="dash-sec" style="cursor:pointer">📦 更新履歴</summary><div style="font-size:13px; line-height:1.7">${(s.changelog||[]).map(c=>`<b>v${esc(c[0])}</b>(${esc(c[1])}) ${esc(c[2])}<br>`).join('')}</div></details>
-  <p style="font-size:11px; color:var(--ink-soft); margin-top:16px; text-align:center">English AI Tutor v${APP_VER}<br>© Maki Daisuke / 愛媛大学教育学部附属中学校</p>`;
+  <p style="font-size:11px; color:var(--ink-soft); margin-top:16px; text-align:center">English AI Tutor v${APP_VER}<br>© 真木大輔(Maki Daisuke) / 愛媛大学教育学部附属中学校</p>`;
 }
 function saveSettingsUI(){
   const items={'チューター名':$('st_name').value.trim()||'ピコ','チューター画像URL':$('st_img').value.trim(),'チャット機能':$('st_chat').value,'チャットモデル':$('st_model').value,'OpenAI APIキー':$('st_key').value.trim(),'チャットプロンプト':$('st_prompt').value,'ライティングプロンプト':$('st_prompt2').value,'年度':$('st_year').value.trim(),'ChatGPTリンク':$('st_gpt').value.trim(),'瞬間英作文秒数':$('st_inst').value.trim()};
