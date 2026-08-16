@@ -974,16 +974,17 @@ function apiGet(done, fail){
   const handle=txt=>{
     let d; try{ d=JSON.parse(txt); }catch(e){ throw new Error('サーバー応答がJSONではありません: '+txt.replace(/<[^>]+>/g,' ').slice(0,160)); }
     if(d && d.error) throw new Error('サーバーエラー: '+d.error);
+    if(d && d.ok===false) throw new Error('サーバー: '+(d.error||'旧バージョンのGASです。Code.gsを貼り替えて「新バージョンでデプロイ」してください'));
     try{ done(d); }catch(e){ console.error(e); throw new Error('画面の描画エラー: '+(e&&e.message||e)); }
   };
-  fetch(GAS_URL+'?api=data&sid='+encodeURIComponent(SID)+'&t='+encodeURIComponent(TKEY))
+  // POST優先(GASの302リダイレクトでGETが弾かれる環境があるため)。ダメならGET
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'data', sid:SID, t:TKEY})})
     .then(r=>r.text()).then(handle)
     .catch(err=>{
-      if(err && /描画エラー|サーバーエラー|JSONでは/.test(String(err.message))) { fail(err); return; }
-      // GETが弾かれた場合はPOSTで再取得
-      fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'data', sid:SID, t:TKEY})})
+      if(err && /描画エラー|サーバー/.test(String(err.message))) { fail(err); return; }
+      fetch(GAS_URL+'?api=data&sid='+encodeURIComponent(SID)+'&t='+encodeURIComponent(TKEY))
         .then(r=>r.text()).then(handle)
-        .catch(e2=>fail(new Error('通信に失敗しました('+(err.message||err)+' / POST: '+(e2.message||e2)+')。GASを「新バージョンでデプロイ」したか、アクセス権が「全員」かを確認してください')));
+        .catch(e2=>fail(new Error('通信に失敗しました(POST: '+(err.message||err)+' / GET: '+(e2.message||e2)+')。GASを「新バージョンでデプロイ」したか、アクセス権が「全員」かを確認してください')));
     });
 }
 function apiPost(p, done){
