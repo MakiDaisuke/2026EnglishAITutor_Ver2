@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>English AI Tutor</title>
@@ -11,10 +13,15 @@
     --miss:#C6483E; --miss-soft:#FBEAE8; --ok:#2E7D4F; --ok-soft:#E6F2EA;
     --gold:#B07A1E; --gold-soft:#FBF3E2; --purple:#5A4FA0;
     --r:14px;
-    --reading:"Iowan Old Style", Georgia, "Times New Roman", serif;
-    --ui:-apple-system, "Hiragino Sans", system-ui, sans-serif;
+    --reading:"UD デジタル 教科書体 N-R","UD Digi Kyokasho N-R","UD デジタル 教科書体 NP-R","BIZ UDPGothic","BIZ UDGothic","Hiragino Sans",-apple-system,system-ui,sans-serif;
+    --ui:"UD デジタル 教科書体 N-R","UD Digi Kyokasho N-R","BIZ UDPGothic","BIZ UDGothic",-apple-system,"Hiragino Sans",system-ui,sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html.big{font-size:112%}
+  html.big .sent .en{font-size:1.35em; line-height:2}
+  html.big .qd-q .qt{font-size:1.15em}
+  html.big .cmsg{font-size:1.08em}
+  html.big .opt{font-size:1.1em}
   html,body{height:100%}
   body{font-family:var(--ui); background:var(--paper); color:var(--ink); font-size:17px; line-height:1.6; overscroll-behavior:none}
   button{font-family:var(--ui); border:none; background:none; cursor:pointer; color:inherit}
@@ -109,6 +116,13 @@
   .qd-q .genre{font-size:12px; font-weight:700; color:var(--ink-soft); letter-spacing:.06em; display:block; margin-bottom:6px}
   .qd-q .qt{font-size:21px; line-height:1.6; font-weight:600}
   .qd-q .qt .blank{color:var(--teal); font-weight:800}
+  .hint-row{display:flex; gap:8px; align-items:center; margin:0 0 10px; min-height:34px; flex-wrap:wrap}
+  .hint-row .chip{padding:7px 12px; font-size:13px}
+  .hint-row span{font-size:14px; color:var(--purple); font-weight:600}
+  .opt.dim{opacity:.28; pointer-events:none}
+  .exp-box .ew{background:#fff; border:1px dashed #EAD9B0; border-radius:8px; padding:8px 10px; margin:6px 0; font-size:14px}
+  .exp-box .ew b{color:var(--miss)}
+  .exp-box .ej{font-size:13.5px; color:var(--ink-soft); margin-top:4px}
   .exp-box{display:none; background:var(--gold-soft); border:1.5px solid #EAD9B0; border-radius:12px;
     padding:14px 16px; margin:14px 0}
   .exp-box.show{display:block}
@@ -136,6 +150,9 @@
   .heat i.h1{background:#9ED0C4}
   .heat i.h2{background:var(--teal)}
   /* ---- 瞬間英作文 ---- */
+  .dict-frame{font-family:var(--reading); font-size:18px; letter-spacing:.06em; color:var(--ink-soft); margin-top:8px; min-height:24px; line-height:1.9}
+  .dict-frame b{color:var(--teal)}
+  .dict-frame .okw{color:var(--ok); font-weight:700; letter-spacing:0}
   .inst-ja{background:var(--card); border:1px solid var(--line); border-radius:20px; padding:30px 22px;
     text-align:center; font-size:24px; font-weight:700; line-height:1.6; margin-bottom:14px}
   .inst-cd{height:10px; background:#E7EAE7; border-radius:99px; overflow:hidden; margin-bottom:12px}
@@ -515,6 +532,7 @@
       <span class="genre" id="qdGenre"></span>
       <div class="qt" id="qdQ"></div>
     </div>
+    <div class="hint-row"><button class="chip" id="qdHint">💡 ヒント</button><span id="qdHintTxt"></span></div>
     <div class="opts" id="qdOpts"></div>
     <input class="spell-in" id="qdIn" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="ここに入力" style="display:none">
     <div class="slots" id="qdSlots" style="display:none"></div>
@@ -526,6 +544,7 @@
     </div>
     <div class="sub-row">
       <button class="big" id="qdCheck" style="display:none">こたえあわせ</button>
+      <button class="big" id="qdRetry" style="display:none; background:var(--gold)">🔁 もう一度チャレンジ</button>
       <button class="big" id="qdNext" style="display:none">つぎへ ›</button>
     </div>
   </div>
@@ -751,10 +770,20 @@
   <header><button class="back-btn" data-quit>‹ やめる</button><h1>ディクテーション</h1></header>
   <div class="drill">
     <div class="progress"><span id="dNum"></span><div class="bar"><i id="dBar"></i></div><span class="task-tag" id="dTask" style="display:none">宿題</span></div>
+    <div class="chips" style="justify-content:center; margin-bottom:6px" id="dSpeed">
+      <span class="tb-lbl" style="align-self:center">はやさ</span>
+      <button class="chip" data-r="0.5">かなりゆっくり</button>
+      <button class="chip" data-r="0.65">ゆっくり</button>
+      <button class="chip" data-r="0.85">ふつう</button>
+      <button class="chip" data-r="1.0">はやい</button>
+      <span class="tb-sep"></span>
+      <button class="chip" id="dEasy">🌱 やさしいモード</button>
+    </div>
     <div class="q-prompt">
       <div class="sub">音を聞いて、文をそのままタイプしよう</div>
       <button class="snd" id="dSnd" style="width:64px; height:64px; font-size:26px">🔊</button>
       <div class="sub" id="dPlays"></div>
+      <div class="dict-frame" id="dFrame"></div>
     </div>
     <input class="spell-in" id="dIn" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="聞こえた英文を入力" style="font-size:19px; text-align:left">
     <div class="exp-box" id="dAns">
@@ -1162,6 +1191,8 @@ function logout(){
 $('nameChip').onclick = ()=>{ openMySettings(); };
 
 /* ---- じぶんの設定(パスワード変更・読み方・速さ・ログアウト) ---- */
+function applyBig(){ document.documentElement.classList.toggle('big', lsGet('eig_big')==='1'); }
+applyBig();
 function openMySettings(){
   const box=$('gateBox');
   $('nameGate').classList.add('on');
@@ -1174,6 +1205,8 @@ function openMySettings(){
     <button class="big" id="msPw" style="width:100%">パスワードを変更</button>
     <div class="field" style="text-align:left; margin-top:14px"><label>🔊 読み上げの速さ: <b id="msSpdV">${SPD().toFixed(1)}x</b></label>
       <input id="msSpd" type="range" min="0.5" max="1.4" step="0.1" value="${SPD()}" style="width:100%"></div>
+    <div class="field" style="text-align:left"><label>🔠 文字の大きさ</label>
+      <div class="chips"><button class="chip ${lsGet('eig_big')==='1'?'':'on'}" id="msBigOff">ふつう</button><button class="chip ${lsGet('eig_big')==='1'?'on':''}" id="msBigOn">大きく</button></div></div>
     <div class="field" style="text-align:left"><label>⚡ 瞬間英作文の考える時間: <b id="msInstV">${instSec()}秒</b>(先生の設定: ${(DATA.tutor&&DATA.tutor.instSec)||8}秒)</label>
       <input id="msInst" type="range" min="3" max="20" step="1" value="${instSec()}" style="width:100%"></div>
     <div class="sub-row" style="margin-top:14px">
@@ -1185,6 +1218,8 @@ function openMySettings(){
   $('msOut').onclick=()=>{ if(confirm('ログアウトしますか?')) logout(); };
   $('msSpd').oninput=()=>{ lsSet('eig_spd',$('msSpd').value); $('msSpdV').textContent=(+$('msSpd').value).toFixed(1)+'x'; };
   $('msInst').oninput=()=>{ lsSet('eig_inst',$('msInst').value); $('msInstV').textContent=$('msInst').value+'秒'; };
+  $('msBigOn').onclick=()=>{ lsSet('eig_big','1'); applyBig(); openMySettings(); };
+  $('msBigOff').onclick=()=>{ lsSet('eig_big','0'); applyBig(); openMySettings(); };
   $('msPw').onclick=()=>{
     const o=$('msOld').value.trim(), n=$('msNew').value.trim();
     if(!/^[0-9A-Za-z]{4,12}$/.test(n)){ toast('4〜12文字の英数字にしてね'); return; }
@@ -1796,7 +1831,7 @@ function startHomework(h){
 }
 
 /* ================= 問題演習(4択・穴埋め・整序+解説) ================= */
-let QD={list:[], idx:0, good:0, wrong:[], answered:false, cur:null, picked:[], pool:[], words:[], params:null, test:false, timerId:null, deadline:0};
+let QD={list:[], idx:0, good:0, wrong:[], answered:false, cur:null, picked:[], pool:[], words:[], params:null, test:false, timerId:null, deadline:0, hint:0, hints:0, retry:false, opts:[]};
 function startQDrill(setName, weakOnly, task, opts){
   currentTask = task || currentTask;
   let pool = setName ? DATA.questions.filter(q=>q.set===setName) : DATA.questions.slice();
@@ -1822,7 +1857,7 @@ function startQDrill(setName, weakOnly, task, opts){
     QD.list=seq?pool.slice(0,10):pickWeighted(pool, Math.min(10, pool.length));
     $('qdTimer').style.display='none';
   }
-  QD.idx=0; QD.good=0; QD.wrong=[]; QD.params={setName, weakOnly, task: currentTask, test:QD.test};
+  QD.idx=0; QD.good=0; QD.wrong=[]; QD.hints=0; QD.params={setName, weakOnly, task: currentTask, test:QD.test};
   $('qdTitle').textContent = QD.test ? '📝 テスト' : (weakOnly ? 'にがて復習' : (setName||'問題'));
   $('qdTask').style.display=currentTask?'inline':'none';
   show('qdView'); drawQD();
@@ -1857,11 +1892,15 @@ function drawQD(){
     showResult(pct, scoreMsg(pct), wrongsView,
       QD.test?'テスト':'問題',
       QD.params.setName||(QD.params.weakOnly?'にがて復習':'全範囲'),
-      `${QD.good}/${QD.list.length}問正解`+(QD.test?'(テスト)':''));
+      `${QD.good}/${QD.list.length}問正解`+(QD.test?'(テスト)':'')+(QD.hints?`・ヒント${QD.hints}回`:''));
     return;
   }
-  QD.answered=false;
+  QD.answered=false; QD.hint=0;
   const q=QD.cur=QD.list[QD.idx];
+  $('qdHint').style.display = QD.test ? 'none' : 'inline-flex';
+  $('qdHint').disabled=false; $('qdHint').textContent='💡 ヒント';
+  $('qdHintTxt').textContent='';
+  $('qdRetry').style.display='none';
   $('qdNum').textContent=`${QD.idx+1} / ${QD.list.length}`;
   $('qdBar').style.width=(QD.idx/QD.list.length*100)+'%';
   $('qdGenre').textContent=q.genre+' ・ '+q.fmt;
@@ -1888,7 +1927,7 @@ function drawQD(){
     $('qdCheck').style.display='block';
     drawQDChips();
   }else{ // 4択
-    const opts=shuffle(q.a.length>=2?q.a:[q.ans]);
+    const opts=shuffle(q.a.length>=2?q.a:[q.ans]); QD.opts=opts;
     $('qdOpts').style.display='grid';
     $('qdOpts').innerHTML=opts.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o)}</button>`).join('');
     $('qdOpts').querySelectorAll('.opt').forEach(b=>{
@@ -1901,7 +1940,7 @@ function drawQD(){
           if(opts[+x.dataset.i]===q.ans) x.classList.add('right');
         });
         if(!right) b.classList.add('wrong');
-        qdAnswered(right);
+        qdAnswered(right, pick);
       };
     });
   }
@@ -1933,7 +1972,35 @@ $('qdCheck').onclick=()=>{
     right = QD.picked.map(p=>p.w).join(' ')===QD.words.join(' ');
     $('qdSlots').classList.add(right?'right':'wrong');
   }
-  qdAnswered(right);
+  qdAnswered(right, q.fmt==='穴埋め'?$('qdIn').value.trim():QD.picked.map(p=>p.w).join(' '));
+};
+/* 選択肢の意味 "A=…;B=…;C=…;D=…" → {選択肢文字列: 意味} */
+function optMeanings(q){
+  const m={}; if(!q.meaning) return m;
+  String(q.meaning).split(/[;；]/).forEach(p=>{ const mm=p.match(/^\s*([A-Da-d])\s*[=＝:：]\s*(.+)$/); if(mm){ const idx='ABCD'.indexOf(mm[1].toUpperCase()); if(q.a[idx]) m[q.a[idx]]=mm[2].trim(); } });
+  return m;
+}
+$('qdHint').onclick=()=>{
+  if(QD.answered||QD.test) return;
+  const q=QD.cur; QD.hint++; QD.hints++;
+  const M=optMeanings(q);
+  if(q.fmt==='4択'){
+    if(QD.hint===1){ $('qdHintTxt').textContent = q.ja ? '訳: '+q.ja : (M[q.ans] ? '正解の意味: '+M[q.ans] : '正解は「'+q.ans.charAt(0)+'」ではじまる語'); $('qdHint').textContent='💡 もっとヒント'; }
+    else if(QD.hint===2){
+      const wrongs=QD.opts.filter(o=>o!==q.ans); const dimN=Math.min(2, Math.max(0, QD.opts.length-2));
+      shuffle(wrongs).slice(0,dimN).forEach(w=>{ $('qdOpts').querySelectorAll('.opt').forEach(b=>{ if(QD.opts[+b.dataset.i]===w) b.classList.add('dim'); }); });
+      $('qdHintTxt').textContent='2つにしぼったよ。'+(q.ja?'訳: '+q.ja:'');
+    }else{ $('qdHintTxt').textContent='正解は「'+q.ans.charAt(0)+'」ではじまるよ。'+(q.ja?'訳: '+q.ja:''); $('qdHint').disabled=true; }
+  }else if(q.fmt==='穴埋め'){
+    const w=q.ans.trim();
+    if(QD.hint===1) $('qdHintTxt').textContent=(q.ja?'訳: '+q.ja+' / ':'')+'文字数: '+w.replace(/[A-Za-z]/g,'_ ').trim();
+    else if(QD.hint===2) $('qdHintTxt').textContent='さいしょの文字: '+w.charAt(0)+'…';
+    else { $('qdHintTxt').textContent='さいしょの2文字: '+w.slice(0,2)+'…'; $('qdHint').disabled=true; }
+  }else{ // 整序
+    if(QD.hint===1) $('qdHintTxt').textContent='さいしょの語は「'+QD.words[0]+'」';
+    else if(QD.hint===2) $('qdHintTxt').textContent='さいしょの2語:「'+QD.words.slice(0,2).join(' ')+'」';
+    else { $('qdHintTxt').textContent='英文: '+QD.words.length+'語。'+(q.exp?'💡 '+q.exp:''); $('qdHint').disabled=true; }
+  }
 };
 function qSentence(q){
   // 問題文+答えから読み上げ用の完全な英文を作る(日本語ヒントは除去)
@@ -1942,30 +2009,81 @@ function qSentence(q){
   t = t.replace(/[^\x00-\x7F]+/g, ' ').replace(/\s+/g, ' ').trim();
   return t || q.ans;
 }
-function qdAnswered(right){
+function qdAnswered(right, picked){
   QD.answered=true;
   const q=QD.cur;
-  mastMark(q, right);
-  if(right) QD.good++; else QD.wrong.push(q);
+  if(QD.retry){ /* 再挑戦は習熟に加点しない */ }
+  else if(right && QD.hint>0){ const m=MAST[qKey(q)]||{b:1,w:0,r:0}; m.r=(m.r||0)+1; MAST[qKey(q)]=m; lsSet('eig_mast', JSON.stringify(MAST)); }
+  else mastMark(q, right);
+  if(!QD.retry){ if(right) QD.good++; else QD.wrong.push(q); }
   if(!QD.test && /[A-Za-z]/.test(q.ans)) speak(qSentence(q), null);
-  $('qdExpT').textContent = right ? '⭕ せいかい!' : '❌ ざんねん…';
+  const M=optMeanings(q);
+  $('qdExpT').textContent = right ? (QD.retry?'⭕ できた!':'⭕ せいかい!') : '❌ ざんねん…';
   $('qdExpA').textContent = QD.test ? '' : '答え: '+q.ans+(qSentence(q)!==q.ans?'  →  '+qSentence(q):'');
-  $('qdExpB').textContent = QD.test ? '(答えと解説はテスト終了後にまとめて表示されます)' : (q.exp ? '💡 '+q.exp : '');
+  let body='';
+  if(!QD.test){
+    if(!right && picked!=null){
+      body+=`<div class="ew">あなたの答え: <b>${esc(picked)}</b>${M[picked]?' = '+esc(M[picked]):''}${M[q.ans]?`<br>正解 <b style="color:var(--ok)">${esc(q.ans)}</b> = ${esc(M[q.ans])}`:''}</div>`;
+    }
+    if(q.ja) body+=`<div class="ej">訳: ${esc(q.ja)}</div>`;
+    if(q.exp) body+=`<div>💡 ${esc(q.exp)}</div>`;
+    if(!right && Object.keys(M).length && q.fmt==='4択') body+=`<div class="ej">選択肢の意味: ${q.a.map(o=>esc(o)+'='+esc(M[o]||'?')).join(' / ')}</div>`;
+  }else body='(答えと解説はテスト終了後にまとめて表示されます)';
+  $('qdExpB').innerHTML=body;
   $('qdExp').classList.add('show');
-  $('qdCheck').style.display='none';
+  $('qdCheck').style.display='none'; $('qdHint').style.display='none';
+  $('qdRetry').style.display = (!right && !QD.test && !QD.retry) ? 'block' : 'none';
   $('qdNext').textContent = (right||QD.test) ? 'つぎへ ›' : '解説を読んだ → つぎへ ›';
   $('qdNext').style.display='block';
 }
-$('qdNext').onclick=()=>{ QD.idx++; drawQD(); };
+$('qdRetry').onclick=()=>{
+  // 同じ問題をもう一度(選択肢は並べ替え)。成功体験で終わってから次へ
+  QD.retry=true; QD.answered=false; QD.hint=0;
+  const q=QD.cur;
+  $('qdExp').classList.remove('show'); $('qdRetry').style.display='none'; $('qdNext').style.display='none';
+  $('qdHint').style.display='inline-flex'; $('qdHint').disabled=false; $('qdHint').textContent='💡 ヒント'; $('qdHintTxt').textContent='もう一回!';
+  if(q.fmt==='4択'){
+    const opts=shuffle(q.a.length>=2?q.a:[q.ans]); QD.opts=opts;
+    $('qdOpts').innerHTML=opts.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o)}</button>`).join('');
+    $('qdOpts').querySelectorAll('.opt').forEach(b=>{ b.onclick=()=>{ if(QD.answered) return; const pick=opts[+b.dataset.i]; const right=pick===q.ans; $('qdOpts').querySelectorAll('.opt').forEach(x=>{ x.disabled=true; if(opts[+x.dataset.i]===q.ans) x.classList.add('right'); }); if(!right) b.classList.add('wrong'); qdAnswered(right, pick); }; });
+  }else if(q.fmt==='穴埋め'){ const inp=$('qdIn'); inp.value=''; inp.className='spell-in'; inp.disabled=false; $('qdCheck').style.display='block'; setTimeout(()=>{ try{inp.focus();}catch(e){} },100); }
+  else { QD.picked=[]; QD.pool=shuffle(QD.words).map((w,i)=>({w,i,used:false})); $('qdSlots').className='slots'; $('qdCheck').style.display='block'; drawQDChips(); }
+};
+$('qdNext').onclick=()=>{ QD.retry=false; QD.idx++; drawQD(); };
 $('qdIn').addEventListener('keydown', e=>{ if(e.key==='Enter'&&!QD.answered) $('qdCheck').click(); });
 
 /* ================= ディクテーション ================= */
 let DK={list:[], idx:0, good:0, wrong:[], answered:false, plays:0, title:''};
+function dictRate(){ const r=parseFloat(lsGet('eig_drate')||'0.65'); return (r>=0.4&&r<=1.2)?r:0.65; }
+function dictEasy(){ return lsGet('eig_deasy')==='1'; }
+function dictUI(){
+  $('dSpeed').querySelectorAll('[data-r]').forEach(b=>b.classList.toggle('on', Math.abs(parseFloat(b.dataset.r)-dictRate())<0.01));
+  $('dEasy').classList.toggle('on', dictEasy());
+}
+$('dSpeed').querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{ lsSet('eig_drate', b.dataset.r); dictUI(); if(!DK.answered){ synth.cancel(); speak(DK.list[DK.idx].en, null, dictRate()); } });
+$('dEasy').onclick=()=>{ lsSet('eig_deasy', dictEasy()?'0':'1'); dictUI(); dictFrame(); };
+/* やさしいモード:単語数の枠+最初の1語。入力中に合っている語を緑に */
+function dictFrame(){
+  const it=DK.list[DK.idx]; const f=$('dFrame'); if(!it||!f) return;
+  if(!dictEasy()){ f.innerHTML=''; return; }
+  const words=it.en.replace(/[.!?,]/g,'').split(/\s+/);
+  const typed=spokenTokens($('dIn').value);
+  const flat=[], map=[]; words.forEach((w,j)=>tokensOf(w).forEach(t=>{ flat.push(t); map.push(j); }));
+  const hit=lcsHit(flat, typed); const okw=new Array(words.length).fill(true), has=new Array(words.length).fill(0);
+  flat.forEach((t,k)=>{ has[map[k]]++; if(!hit[k]) okw[map[k]]=false; });
+  f.innerHTML=words.map((w,j)=>{
+    if(has[j]&&okw[j]&&typed.length) return `<span class="okw">${esc(w)}</span>`;
+    if(j===0) return `<b>${esc(w)}</b>`;
+    return '_'.repeat(Math.max(2,w.length));
+  }).join(' ')+`<div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px">${words.length}語 ・ 合っている語は緑になるよ</div>`;
+}
+$('dIn').addEventListener('input', ()=>{ if(!DK.answered) dictFrame(); });
 function startDict(items, title, task){
   currentTask = task || currentTask;
   if(!items.length){ toast('ディクテーションできる文がありません'); currentTask=null; return; }
   DK.list=shuffle(items).slice(0,10);
   DK.idx=0; DK.good=0; DK.wrong=[]; DK.title=title||'ディクテーション';
+  dictUI();
   lastDrill={mode:'ディクテーション', items:items, title:title, task:currentTask, cards:[]};
   $('dTask').style.display=currentTask?'inline':'none';
   show('dictView'); drawDict();
@@ -1987,16 +2105,18 @@ function drawDict(){
   inp.style.fontSize='19px'; inp.style.textAlign='left';
   $('dAns').classList.remove('show');
   $('dCheck').style.display='block'; $('dNext').style.display='none';
+  dictFrame();
   dictPlay();
   setTimeout(()=>{ try{inp.focus();}catch(e){} },300);
 }
 function dictPlay(){
   const it=DK.list[DK.idx];
   if(!it) return;
-  if(!DK.answered && DK.plays>=3){ toast('再生は3回までだよ'); return; }
+  const maxPlays = dictEasy() ? 5 : 3;
+  if(!DK.answered && DK.plays>=maxPlays){ toast('再生は'+maxPlays+'回までだよ'); return; }
   if(!DK.answered) DK.plays++;
-  $('dPlays').textContent = DK.answered ? '' : `再生 ${DK.plays}/3回`;
-  speak(it.en, null, 0.85);
+  $('dPlays').textContent = DK.answered ? '' : `再生 ${DK.plays}/${maxPlays}回`;
+  speak(it.en, null, dictRate());
 }
 $('dSnd').onclick=dictPlay;
 $('dCheck').onclick=()=>{
@@ -2006,8 +2126,9 @@ $('dCheck').onclick=()=>{
   const T=spokenTokens(it.en), S=spokenTokens($('dIn').value);
   const hit=lcsHit(T,S);
   const pct=T.length?Math.round(hit.filter(Boolean).length/T.length*100):0;
-  const right=pct>=90;
+  const right=pct>=(dictEasy()?75:90);
   if(right) DK.good++; else DK.wrong.push(it);
+  $('dFrame').innerHTML='';
   $('dIn').classList.add(right?'right':'wrong');
   $('dIn').disabled=true;
   // 正解文を単語ごとに色分け(書けなかった語は赤)
@@ -2022,7 +2143,7 @@ $('dCheck').onclick=()=>{
     `<span style="${has[j]&&!ok[j]?'color:var(--miss); text-decoration:underline wavy var(--miss) 1.5px; text-underline-offset:3px':''}">${esc(w)}</span>`).join(' ');
   $('dAnsB').textContent=it.hint?('💡 '+it.hint):'';
   $('dAns').classList.add('show');
-  speak(it.en, null, 0.85);
+  speak(it.en, null, dictRate());
   $('dCheck').style.display='none'; $('dNext').style.display='block';
   $('dPlays').textContent='';
 };
@@ -3216,7 +3337,7 @@ const SCHEMA={
   '名簿':[['生徒ID(自動・空でOK)'],['クラス(例 1-2)'],['出席番号'],['名前'],['パスワード(空=初期値 組2桁+番号2桁)'],['状態','sel']],
   '教材':[['Unit','sel'],['Part(任意)'],['タイトル'],['本文(改行=1文。「Meg: Yes.」形式で話者ラベル)','ta'],['日本語訳(「/」区切りで文ごと・任意)','ta'],['リンク(教科書QR等・任意)']],
   '単語帳':[['Unit','sel'],['英語'],['意味'],['種別','sel'],['例文(任意)','ta'],['カタカナ(【】=アクセント・任意)'],['発音記号(任意)']],
-  '問題集':[['Unit','sel'],['セット名'],['形式','sel'],['問題文(穴埋めは ___ /整序は日本語)','ta'],['選択肢A(4択のみ)'],['選択肢B'],['選択肢C'],['選択肢D'],['正解'],['解説','ta'],['ジャンル','sel']],
+  '問題集':[['Unit','sel'],['セット名'],['形式','sel'],['問題文(穴埋めは ___ /整序は日本語)','ta'],['選択肢A(4択のみ)'],['選択肢B'],['選択肢C'],['選択肢D'],['正解'],['解説','ta'],['ジャンル','sel'],['日本語訳(問題文の意味・ヒントに使う)'],['選択肢の意味(A=〜;B=〜;C=〜;D=〜)']],
   '瞬間英作文':[['Unit','sel'],['日本語'],['英語'],['ヒント(任意)']],
   '発音':[['英語'],['カタカナ(【】=アクセント)'],['発音記号'],['意味(任意)']],
   '宿題':[['宿題ID(自動・空でOK)'],['課題名'],['タイプ','sel'],['対象','sel'],['締切','sel'],['対象クラス(空=全員。複数は「1-1,1-2」)','sel'],['オプション(順番どおり・10分 等)'],['メモ']],
@@ -3271,7 +3392,7 @@ function tData(){
 function tData_(){
   if(tSheet==='教材') return DATA.passages.map(p=>({id:p.id, v:[p.unit,p.part||'',p.title,p.text,p.translation,p.link||'']}));
   if(tSheet==='単語帳') return DATA.cards.map(c=>({id:c.id, v:[c.unit,c.en,c.ja,c.kind,c.ex,c.kana||'',c.ipa||'']}));
-  if(tSheet==='問題集') return (DATA.questions||[]).map(q=>{ const a=q.a||[]; return {id:q.id, v:[q.unit,q.set,q.fmt,q.q,a[0]||'',a[1]||'',a[2]||'',a[3]||'',q.ans,q.exp,q.genre]}; });
+  if(tSheet==='問題集') return (DATA.questions||[]).map(q=>{ const a=q.a||[]; return {id:q.id, v:[q.unit,q.set,q.fmt,q.q,a[0]||'',a[1]||'',a[2]||'',a[3]||'',q.ans,q.exp,q.genre,q.ja||'',q.meaning||'']}; });
   if(tSheet==='瞬間英作文') return (DATA.instant||[]).map(x=>({id:x.id, v:[x.unit,x.ja,x.en,x.hint||'']}));
   if(tSheet==='発音') return (DATA.pron||[]).filter(p=>p.en).map(p=>({id:p.id, v:[p.en,p.kana,p.ipa,p.ja||'']}));
   if(tSheet==='名簿') return (DATA.rosterFull||[]).map((r,i)=>({id:i, v:[r.sid,r.cls,r.num,r.name,'',r.status]}));
@@ -3555,7 +3676,7 @@ const CSV_HEADERS={
   '名簿':['生徒ID(空でOK)','クラス','出席番号','名前','パスワード(空=初期値)','状態'],
   '教材':['Unit','Part','タイトル','本文(改行=1文)','日本語訳(/区切り)','リンク'],
   '単語帳':['Unit','英語','意味','種別','例文','カタカナ(【】=アクセント)','発音記号'],
-  '問題集':['Unit','セット名','形式','問題文','選択肢A','選択肢B','選択肢C','選択肢D','正解','解説','ジャンル'],
+  '問題集':['Unit','セット名','形式','問題文','選択肢A','選択肢B','選択肢C','選択肢D','正解','解説','ジャンル','日本語訳','選択肢の意味'],
   '瞬間英作文':['Unit','日本語','英語','ヒント'],
   '発音':['英語','カタカナ','発音記号','意味'],
   '宿題':['宿題ID(空でOK)','課題名','タイプ','対象','締切','対象クラス','オプション','メモ'],
@@ -3565,7 +3686,7 @@ const CSV_SAMPLE={
   '名簿':[['','1-1','1','山田 太郎','','在籍']],
   '教材':[['Unit 1','Part 1','Unit 1 Part 1 (p.12)','Meg: Hi. I am Meg.\nKaito: Nice to meet you.','こんにちは。/ わたしはメグです。/ はじめまして。','']],
   '単語帳':[['Unit 1','cricket','クリケット','単語','I am a cricket fan.','ク【リ】ケット','ˈkrɪkɪt']],
-  '問題集':[['Unit 1','Unit 1 基本','4択',"I'm ___ Australia.",'from','in','at','of','from','出身は be from。','文法']],
+  '問題集':[['Unit 1','Unit 1 基本','4択',"I'm ___ Australia.",'from','in','at','of','from','出身は be from。','文法','私はオーストラリア出身です。','A=〜から・〜出身;B=〜の中に;C=〜で;D=〜の']],
   '瞬間英作文':[['Unit 1','あなたはシドニー出身ですか。','Are you from Sydney?','from']],
   '発音':[['apple','【ア】ップル','ˈæpl','りんご']],
   '宿題':[['','Unit 1 音読','音読','Unit 1 Part 1 (p.12)','2026/09/01','','','']],
@@ -3618,7 +3739,7 @@ function genPromptFor(sheet, unit){
   const base=`あなたは日本の中学校の英語教師です。出力は「1行目に見出し、2行目以降がデータ」のCSVのみ(コードブロックや説明文なし。セル内にカンマや改行があれば "…" で囲む)。見出しは必ず次の順: ${head}\n`;
   const u=unit||'(Unit名)';
   if(sheet==='単語帳') return base+`次の教科書本文から中学1年生が覚えるべき単語・熟語を最大20語。Unit列は「${u}」。カタカナはネイティブ発音に近く、第一アクセントの拍を【】で囲む(例 バ【ナ】ナ)。発音記号はIPA(米)。\n【本文】\n(ここに本文を貼る)`;
-  if(sheet==='問題集') return base+`次の教科書本文から練習問題10問(4択6・穴埋め2・整序2)。Unit列は「${u}」、セット名は「${u} 基本」。4択は問題文に___、選択肢A〜D、正解は選択肢と同じ文字列。穴埋めは選択肢空・正解に語。整序は問題文=日本語・正解=英文。解説は中1が読める1〜2文。ジャンルは単語/熟語/文法。本文にない語彙は使わない。\n【本文】\n(ここに本文を貼る)`;
+  if(sheet==='問題集') return base+`次の教科書本文から練習問題10問(4択6・穴埋め2・整序2)。Unit列は「${u}」、セット名は「${u} 基本」。4択は問題文に___、選択肢A〜D、正解は選択肢と同じ文字列。穴埋めは選択肢空・正解に語。整序は問題文=日本語・正解=英文。解説は中1が読める1〜2文。ジャンルは単語/熟語/文法。日本語訳=空所を埋めた英文の自然な訳。選択肢の意味=4択のみ「A=〜;B=〜;C=〜;D=〜」の形で各選択肢の短い日本語の意味(不正解がなぜ合わないか分かるように)。本文にない語彙は使わない。\n【本文】\n(ここに本文を貼る)`;
   if(sheet==='瞬間英作文') return base+`次の教科書本文の重要文型で瞬間英作文10問。Unit列は「${u}」。日本語=自然な中1向け、英語=10語以内の1文(本文の語彙・文型の範囲)、ヒント=最初の1〜2語や文法の短いヒント。\n【本文】\n(ここに本文を貼る)`;
   if(sheet==='教材') return base+`次の教科書本文をUnit/Partごとに行に分けて登録用CSVにしてください。本文は1文ずつ改行(話者があれば「Meg: Yes.」形式)、日本語訳は文と同じ数を「 / 」で区切って。リンクは空でよい。\n【本文】\n(ここに本文を貼る)`;
   if(sheet==='発音') return base+`次の英単語リストについて、カタカナ(ネイティブ発音に近く、第一アクセントの拍を【】で囲む)、IPA発音記号(米)、短い日本語の意味を作ってください。\n【単語】\n(ここに単語をカンマ区切りで)`;
