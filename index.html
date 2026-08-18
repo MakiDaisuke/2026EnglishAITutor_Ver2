@@ -396,9 +396,7 @@
   .cmsg.md b{color:#1F5F87; font-weight:800}
   .cmsg.md i{font-style:normal; background:var(--gold-soft); padding:0 3px; border-radius:4px}
   .cmsg.md .kw{color:var(--miss); font-weight:700}
-  .talk-modes button{position:relative; padding-top:18px}
-  .talk-modes .dayl{position:absolute; top:3px; left:0; right:0; font-size:9.5px; letter-spacing:.1em; color:var(--ink-soft); font-weight:800}
-  .talk-modes button.on .dayl{color:var(--teal)}
+  .talk-modes button{position:relative; padding:12px 6px; font-size:14.5px}
   .daydesc{font-size:12.5px; color:var(--ink-soft); margin:-4px 0 10px; padding:6px 10px; background:var(--card); border-radius:8px}
   .cmsg.ai .sline:active{background:var(--teal-soft)}
   .chat-input{position:fixed; left:0; right:0; bottom:calc(64px + env(safe-area-inset-bottom)); z-index:39;
@@ -1345,7 +1343,7 @@ function tutorScoreComment(pct, type){
   tutorScene(pct>=90?'result_high':pct>=70?'result_mid':'result_low', {pct:pct});
 }
 
-/* ================= AIトーク(Day1 会話 / Day2 作文 / Day3 ChatGPT) ================= */
+/* ================= AIトーク(英会話 / 作文添削) ================= */
 let TALKS={'会話':[], '作文':[]}, talkMode='会話', talkBusy=false, chatImg=null;
 function TALK(){ return TALKS[talkMode]; }
 function talkLoadHistory(){
@@ -1423,11 +1421,10 @@ function renderTalk(){
   }
   talkSeed();
   let html='<div class="talk-modes">'
-    +`<button data-m="会話" class="${talkMode==='会話'?'on':''}"><span class="dayl">Day 1</span>💬 会話</button>`
-    +`<button data-m="作文" class="${talkMode==='作文'?'on':''}"><span class="dayl">Day 2</span>✍️ 作文添削</button>`
-    +`<button data-m="gpt"><span class="dayl">Day 3</span>🔗 ChatGPT</button>`
+    +`<button data-m="会話" class="${talkMode==='会話'?'on':''}">💬 英会話</button>`
+    +`<button data-m="作文" class="${talkMode==='作文'?'on':''}">✍️ 作文添削</button>`
     +'</div>'
-    +`<div class="daydesc">${talkMode==='会話'?'<b>Day 1 会話</b>:英語で話すと、直して質問してくれる':'<b>Day 2 作文添削</b>:英作文を貼るか📷で撮ると ①文法 ②表現 ③構成 でアドバイス'}</div>`;
+    +`<div class="daydesc">${talkMode==='会話'?'<b>英会話</b>:英語で話すと、直して質問してくれる':'<b>作文添削</b>:英作文を貼るか📷で撮ると ①文法 ②表現 ③構成 でアドバイス'}</div>`;
   html+='<div class="chat-box" id="chatBox">';
   TALK().forEach((m,i)=>{
     if(m.role==='user'){
@@ -1440,7 +1437,6 @@ function renderTalk(){
   html+='</div>';
   el.innerHTML=html;
   el.querySelectorAll('.talk-modes button').forEach(b=>b.onclick=()=>{
-    if(b.dataset.m==='gpt'){ window.open((DATA.tutor&&DATA.tutor.gptUrl)||'https://chatgpt.com/', '_blank'); return; }
     talkMode=b.dataset.m; chatImgClear(); renderTalk();
     $('chatCam').style.display = talkMode==='作文' ? 'inline-flex' : 'none';
     $('chatTa').placeholder = talkMode==='作文' ? '英作文をここに貼る(または📷で写真)' : '英語で話してみよう(日本語でもOK)';
@@ -3659,14 +3655,13 @@ function renderSettings(){
   <div class="field"><label>画像URL(空=内蔵のフクロウ。Drive共有リンクは https://drive.google.com/uc?export=view&id=ファイルID の形で)</label><input id="st_img" value="${escA(s.img||'')}" placeholder="https://…/pico.png"></div>
   <button class="chip" id="stIconPrompt">📋 アイコン用プロンプトをコピー(画像生成AI用)</button>
   </details>
-  <details><summary class="dash-sec" style="cursor:pointer">💬 AIトーク(Day1/Day2)</summary>
+  <details><summary class="dash-sec" style="cursor:pointer">💬 AIトーク(英会話・作文添削)</summary>
   <p class="thelp">APIキーはスクリプトプロパティ OPENAI_API_KEY に保存(シート・生徒に見えない)。現在: ${s.keySet?'<b style="color:var(--ok)">設定済み</b>':'<b style="color:var(--miss)">未設定</b>'}</p>
   <div class="field"><label>トーク機能</label>${sel('st_chat',[['ON','ON(生徒が使える)'],['OFF','OFF']],s.chatOn?'ON':'OFF')}</div>
   <div class="field"><label>モデル</label>${sel('st_model',[['gpt-5.4-nano','gpt-5.4-nano(安い・速い)'],['gpt-5.4-mini','gpt-5.4-mini(高精度)'],['gpt-4o-mini','gpt-4o-mini']],s.model)}</div>
   <div class="field"><label>APIキー(変更時のみ入力)</label><input id="st_key" type="password" placeholder="sk-…"></div>
-  <div class="field"><label>Day1 会話プロンプト</label><textarea id="st_prompt" style="min-height:160px; font-size:13px">${esc(s.prompt)}</textarea></div>
-  <div class="field"><label>Day2 作文添削プロンプト</label><textarea id="st_prompt2" style="min-height:160px; font-size:13px">${esc(s.prompt2||'')}</textarea></div>
-  <div class="field"><label>Day3 ChatGPTリンク(生徒が「Day 3」を押すと開くURL)</label><input id="st_gpt" value="${escA(s.gptUrl||'')}" placeholder="https://chatgpt.com/g/…"></div>
+  <div class="field"><label>英会話プロンプト</label><textarea id="st_prompt" style="min-height:160px; font-size:13px">${esc(s.prompt)}</textarea></div>
+  <div class="field"><label>作文添削プロンプト</label><textarea id="st_prompt2" style="min-height:160px; font-size:13px">${esc(s.prompt2||'')}</textarea></div>
   <div class="field"><label>⚡ 瞬間英作文の考える時間(秒・生徒側で変更も可)</label><input id="st_inst" type="number" min="3" max="30" value="${escA(String(s.instSec||8))}"></div>
   <div class="dash-sec">🛡 個人情報・同意</div>
   <div class="field"><label>保護者同意(全員分の同意書を回収したら「取得済み」に。未取得の間は生徒のトークが「準備中」表示)</label>${sel('st_consent',[['未取得','未取得(トークは準備中表示)'],['取得済み','取得済み(全員が使える)']],s.consent?'取得済み':'未取得')}</div>
@@ -3688,7 +3683,7 @@ function renderSettings(){
   <p style="font-size:11px; color:var(--ink-soft); margin-top:16px; text-align:center">English AI Tutor v${APP_VER}<br>© 真木大輔(Maki Daisuke) / 愛媛大学教育学部附属中学校</p>`;
 }
 function saveSettingsUI(){
-  const items={'チューター名':$('st_name').value.trim()||'ピコ','チューター画像URL':$('st_img').value.trim(),'チャット機能':$('st_chat').value,'チャットモデル':$('st_model').value,'OpenAI APIキー':$('st_key').value.trim(),'チャットプロンプト':$('st_prompt').value,'ライティングプロンプト':$('st_prompt2').value,'年度':$('st_year').value.trim(),'ChatGPTリンク':$('st_gpt').value.trim(),'瞬間英作文秒数':$('st_inst').value.trim(),'保護者同意':$('st_consent').value,'ZDR承認日':$('st_zdr').value.trim()};
+  const items={'チューター名':$('st_name').value.trim()||'ピコ','チューター画像URL':$('st_img').value.trim(),'チャット機能':$('st_chat').value,'チャットモデル':$('st_model').value,'OpenAI APIキー':$('st_key').value.trim(),'チャットプロンプト':$('st_prompt').value,'ライティングプロンプト':$('st_prompt2').value,'年度':$('st_year').value.trim(),'瞬間英作文秒数':$('st_inst').value.trim(),'保護者同意':$('st_consent').value,'ZDR承認日':$('st_zdr').value.trim()};
   const np=$('st_pass').value.trim(); if(np) items['教員パスコード']=np;
   $('stSave').disabled=true;
   apiPost({action:'settings', key:TKEY, items:items}, (ok,err)=>{
