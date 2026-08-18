@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>English AI Tutor</title>
@@ -13,8 +13,8 @@
     --miss:#C6483E; --miss-soft:#FBEAE8; --ok:#2E7D4F; --ok-soft:#E6F2EA;
     --gold:#B07A1E; --gold-soft:#FBF3E2; --purple:#5A4FA0;
     --r:14px;
-    --reading:"UD デジタル 教科書体 N-R","UD Digi Kyokasho N-R","UD デジタル 教科書体 NP-R","BIZ UDPGothic","BIZ UDGothic","Hiragino Sans",-apple-system,system-ui,sans-serif;
-    --ui:"UD デジタル 教科書体 N-R","UD Digi Kyokasho N-R","BIZ UDPGothic","BIZ UDGothic",-apple-system,"Hiragino Sans",system-ui,sans-serif;
+    --reading:"UD デジタル 教科書体 NK-R","UD Digi Kyokasho NK-R","UD デジタル 教科書体 NK-B","UD デジタル 教科書体 N-R","UD Digi Kyokasho N-R","Andika","BIZ UDPGothic","Hiragino Sans",-apple-system,system-ui,sans-serif;
+    --ui:"UD デジタル 教科書体 NK-R","UD Digi Kyokasho NK-R","UD デジタル 教科書体 N-R","UD Digi Kyokasho N-R","BIZ UDPGothic","BIZ UDGothic",-apple-system,"Hiragino Sans",system-ui,sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html.big{font-size:112%}
@@ -385,7 +385,8 @@
   .cmsg.ai .spkbtn{display:inline-flex; margin-top:6px; padding:4px 12px; border-radius:999px;
     background:var(--teal-soft); color:var(--teal); font-size:13px; font-weight:700}
   .cmsg.typing{color:var(--ink-soft); font-style:italic}
-  .cmsg.ai .sline{display:inline; cursor:pointer; border-bottom:1.5px dashed var(--teal); color:var(--ink)}
+  .cmsg.ai .sline{display:inline; cursor:pointer; border-bottom:1.5px dashed var(--teal); color:var(--ink); font-family:var(--reading)}
+  .opt,.wchip,.spell-in,.inst-ja,.dict-frame,#qdQ,.exp-box .ea{font-family:var(--reading)}
   .cmsg.md{white-space:normal}
   .cmsg.md .mh{font-weight:800; color:var(--teal); margin:10px 0 4px; font-size:14px; letter-spacing:.02em}
   .cmsg.md .mh:first-child{margin-top:0}
@@ -411,6 +412,9 @@
   #chatMic.rec{background:var(--miss); color:#fff; border-color:var(--miss)}
   #chatSend{background:var(--teal); color:#fff}
   #chatSend:disabled{opacity:.4}
+  .rules{background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:14px 16px; margin:6px 0}
+  .rules h3{margin:0 0 8px; color:var(--teal); font-size:16px}
+  .rules ol{margin:0 0 0 20px; padding:0; font-size:15px; line-height:1.9}
   .talk-modes{display:flex; gap:6px; margin:4px 0 10px}
   .talk-modes button{flex:1; padding:10px 6px; border-radius:12px; border:1.5px solid var(--line); background:var(--card); font-size:13px; font-weight:700; color:var(--ink-soft)}
   .talk-modes button.on{border-color:var(--teal); background:var(--teal-soft); color:var(--teal)}
@@ -880,7 +884,7 @@
  *  GAS_URL : GAS「ウェブアプリ」のデプロイURL(…/exec で終わるもの)
  *            新しくデプロイし直したら、ここを新しいURLに貼り替える
  * ============================================================ */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzXKKxJnKdw-lNLRV-vrWHCTUTH0uVBMoX6Mvf_lqAtAtTb7oEvejMrE471BmbypnU1/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxyJDANez3Q-WTx9NBTI8GUTBPISDD0hkIYiOh6sRY4uU1DMWES-0c2yaAdadITDPqQ/exec';
 
 (function(){
 'use strict';
@@ -1261,7 +1265,7 @@ function setTab(t){
   document.querySelectorAll('#navBar button').forEach(x=>x.classList.toggle('on', x.dataset.t===t));
   document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
   $('pane-'+t).classList.add('on');
-  $('chatInput').classList.toggle('on', t==='talk');
+  $('chatInput').classList.toggle('on', t==='talk' && !talkBlockedMsg() && lsGet('eig_talkok')==='1');
   if(t==='talk') setTimeout(()=>{ const b=$('chatBox'); if(b) b.scrollTop=b.scrollHeight; },50);
   if(!TKEY && DATA.passages) tutorScene('tab_'+t);
   window.scrollTo(0,0);
@@ -1351,7 +1355,7 @@ function talkLoadHistory(){
 function talkSeed(){
   if(TALK().length) return;
   if(talkMode==='会話')
-    TALK().push({role:'assistant', content:'Hi'+(NAME?', '+NAME.replace(/^.*\s/,''):'')+'!\nWhat do you want to talk about?\n(何について話したい? じこしょうかいからでもいいよ。英語の行はタップすると読み上げるよ)'});
+    TALK().push({role:'assistant', content:'Hi!\nWhat do you want to talk about?\n(何について話したい? じこしょうかいはニックネームでOK。英語の行はタップすると読み上げるよ)'});
   else
     TALK().push({role:'assistant', content:'英作文の添削モードだよ。\n書いた英文をここに貼るか、📷でノートの写真を撮って送ってね。\n①文法・語彙 ②表現 ③構成 の3つの目で見て、日本語でアドバイスするよ。'});
 }
@@ -1392,11 +1396,29 @@ function isEnLine(l){
   const letters=(l.match(/[A-Za-z]/g)||[]).length;
   return letters>=4 && letters/Math.max(1,l.replace(/\s/g,'').length)>0.6;
 }
+const TALK_RULES=`<div class="rules"><h3>💬 AIトークの やくそく</h3>
+  <ol>
+    <li>名前・住所・学校名・電話番号は書かない(じこしょうかいはニックネームでOK)</li>
+    <li>ノートの写真を送るときは、名前が写っていないかたしかめる</li>
+    <li>AIはまちがえることがある。へんだと思ったら先生に聞く</li>
+    <li>人がいやな気持ちになることは書かない(書くと先生に知らせが行きます)</li>
+    <li>いやなことがあったら、すぐ先生に相談する</li>
+  </ol></div>`;
+function talkBlockedMsg(){
+  if(!(DATA.tutor&&DATA.tutor.chatOn)) return '💬 AIトークは今は使えません。<br>(先生が⚙設定でONにすると使えるようになります)';
+  if(!(DATA.tutor&&DATA.tutor.consent)) return '💬 AIトークは準備中です。<br>(保護者の同意を確認してから使えるようになります)';
+  if(DATA.me&&DATA.me.aiOff) return '💬 AIトークは先生に確認してから使えます。';
+  return '';
+}
 function renderTalk(){
   const el=$('pane-talk');
-  if(!(DATA.tutor&&DATA.tutor.chatOn)){
-    el.innerHTML='<div class="empty">💬 AIトークは今は使えません。<br>(先生が⚙設定でONにすると使えるようになります)</div>';
+  const blocked=talkBlockedMsg();
+  if(blocked){ el.innerHTML='<div class="empty">'+blocked+'</div>'; $('chatInput').classList.remove('on'); return; }
+  if(lsGet('eig_talkok')!=='1'){
+    el.innerHTML=TALK_RULES+'<label style="display:flex; gap:10px; align-items:center; font-size:15px; margin:12px 4px"><input type="checkbox" id="talkAgree" style="width:22px; height:22px"> やくそくを読んで、まもります</label><button class="big" id="talkStart" style="width:100%" disabled>トークをはじめる</button>';
     $('chatInput').classList.remove('on');
+    $('talkAgree').onchange=()=>{ $('talkStart').disabled=!$('talkAgree').checked; };
+    $('talkStart').onclick=()=>{ lsSet('eig_talkok','1'); renderTalk(); if($('pane-talk').classList.contains('on')) $('chatInput').classList.add('on'); };
     return;
   }
   talkSeed();
@@ -1469,6 +1491,7 @@ $('chatFile').onchange=e=>{
     URL.revokeObjectURL(url);
     chatImg=cv.toDataURL('image/jpeg',0.8);
     $('chatPrevImg').src=chatImg; $('chatPrev').classList.add('on');
+    toast('📷 名前や学校名が写っていないか、たしかめてから送ってね',3500);
     $('chatTa').focus();
   };
   img.onerror=()=>{ toast('写真を読みこめませんでした'); };
@@ -3353,7 +3376,7 @@ function selOptions(sheet, idx){
   const cardSets=[...new Set(DATA.cards.map(c=>c.set))];
   const qSets=[...new Set((DATA.questions||[]).map(q=>q.set))];
   const dueOpts=[1,3,7,14].map(d=>dstr(new Date(Date.now()+d*864e5)));
-  if(sheet==='名簿' && idx===5) return ['在籍','転出'];
+  if(sheet==='名簿' && idx===5) return ['在籍','在籍 AI不可','転出'];
   if(['教材','単語帳','問題集','瞬間英作文'].indexOf(sheet)>=0 && idx===0) return unitsAll();
   if(sheet==='単語帳' && idx===3) return ['単語','熟語'];
   if(sheet==='問題集'){ if(idx===2) return ['4択','穴埋め','整序']; if(idx===10) return ['単語','熟語','文法']; }
@@ -3446,9 +3469,10 @@ function renderDash(){
     return `<div class="alertcard">⏰ <b>${h.due===todayS?'今日':'明日'}締切</b>「${esc(h.task)}」— 未提出 <b>${miss.length}</b>/${target.length}名</div>`;
   }).join('');
   html+=alerts||'<div class="followline" style="color:var(--ink-soft)">直近の締切はありません</div>';
-  if(DATA.activeToday!=null) html+=`<div class="followline">📱 アプリを使った生徒: 今日 <b>${DATA.activeToday}</b>名 ・ 昨日 <b>${DATA.activeYest}</b>名 / ${(DATA.rosterFull||[]).length}名</div>`;
-  const reports=recs.filter(r=>r.type==='通報').slice(-5).reverse();
-  html+=reports.map(r=>`<div class="alertcard">🚨 <b>通報</b>: <button class="stlink" data-sid="${escA(r.sid)}">${esc(r.name)}</button> がAIトークで不適切な発言をした可能性(${esc(r.time)})</div>`).join('');
+  if(DATA.activeToday!=null) html+=`<div class="followline">📱 アプリを使った生徒: 今日 <b>${DATA.activeToday}</b>名 ・ 昨日 <b>${DATA.activeYest}</b>名 / ${(DATA.rosterFull||[]).length}名${DATA.talkToday!=null?` ・ 💬 今日のAIトーク <b>${DATA.talkToday}</b>件`:''}</div>`;
+  const reports=recs.filter(r=>r.type==='通報').slice(-8).reverse();
+  if(reports.length) html+='<div class="dash-sec" style="color:var(--miss)">🚨 AIトークの通報('+reports.length+')</div>';
+  html+=reports.map(r=>`<div class="alertcard">🚨 <button class="stlink" data-sid="${escA(r.sid)}">${esc(r.name)}</button> — ${esc(r.detail||'不適切な発言の可能性')}(${esc(r.time)})。個人カルテのトーク履歴で確認</div>`).join('');
   const feed=recs.slice(-12).reverse();
   if(feed.length){
     html+='<div class="dash-sec">📥 新着提出</div>'+feed.map(r=>{
@@ -3644,6 +3668,10 @@ function renderSettings(){
   <div class="field"><label>Day2 作文添削プロンプト</label><textarea id="st_prompt2" style="min-height:160px; font-size:13px">${esc(s.prompt2||'')}</textarea></div>
   <div class="field"><label>Day3 ChatGPTリンク(生徒が「Day 3」を押すと開くURL)</label><input id="st_gpt" value="${escA(s.gptUrl||'')}" placeholder="https://chatgpt.com/g/…"></div>
   <div class="field"><label>⚡ 瞬間英作文の考える時間(秒・生徒側で変更も可)</label><input id="st_inst" type="number" min="3" max="30" value="${escA(String(s.instSec||8))}"></div>
+  <div class="dash-sec">🛡 個人情報・同意</div>
+  <div class="field"><label>保護者同意(全員分の同意書を回収したら「取得済み」に。未取得の間は生徒のトークが「準備中」表示)</label>${sel('st_consent',[['未取得','未取得(トークは準備中表示)'],['取得済み','取得済み(全員が使える)']],s.consent?'取得済み':'未取得')}</div>
+  <div class="field"><label>ZDR(ゼロデータ保持)承認日(メモ・任意)</label><input id="st_zdr" value="${escA(s.zdr||'')}" placeholder="例 2026/09/01 承認"></div>
+  <p class="thelp">個別に止めたい生徒は、名簿の「状態」欄に「AI不可」と書けばその生徒だけトークが閉じます(他機能は使えます)。氏名など個人情報はサーバーが自動で伏せ字にしてから送信し、生徒ID・クラス・学校名は送りません。送信前に内容チェックが入り、不適切な内容は送らず「通報」としてダッシュボードに出ます。</p>
   <button class="chip" id="stTest">📡 AI接続テスト</button> <button class="chip" id="stGenPron">🔤 読み方を自動生成(発音シート)</button>
   </details>
   <details><summary class="dash-sec" style="cursor:pointer">🗓 年度・パスコード</summary>
@@ -3660,7 +3688,7 @@ function renderSettings(){
   <p style="font-size:11px; color:var(--ink-soft); margin-top:16px; text-align:center">English AI Tutor v${APP_VER}<br>© 真木大輔(Maki Daisuke) / 愛媛大学教育学部附属中学校</p>`;
 }
 function saveSettingsUI(){
-  const items={'チューター名':$('st_name').value.trim()||'ピコ','チューター画像URL':$('st_img').value.trim(),'チャット機能':$('st_chat').value,'チャットモデル':$('st_model').value,'OpenAI APIキー':$('st_key').value.trim(),'チャットプロンプト':$('st_prompt').value,'ライティングプロンプト':$('st_prompt2').value,'年度':$('st_year').value.trim(),'ChatGPTリンク':$('st_gpt').value.trim(),'瞬間英作文秒数':$('st_inst').value.trim()};
+  const items={'チューター名':$('st_name').value.trim()||'ピコ','チューター画像URL':$('st_img').value.trim(),'チャット機能':$('st_chat').value,'チャットモデル':$('st_model').value,'OpenAI APIキー':$('st_key').value.trim(),'チャットプロンプト':$('st_prompt').value,'ライティングプロンプト':$('st_prompt2').value,'年度':$('st_year').value.trim(),'ChatGPTリンク':$('st_gpt').value.trim(),'瞬間英作文秒数':$('st_inst').value.trim(),'保護者同意':$('st_consent').value,'ZDR承認日':$('st_zdr').value.trim()};
   const np=$('st_pass').value.trim(); if(np) items['教員パスコード']=np;
   $('stSave').disabled=true;
   apiPost({action:'settings', key:TKEY, items:items}, (ok,err)=>{
@@ -3869,9 +3897,16 @@ $('tDel').onclick=()=>{
 };
 
 /* ================= 起動 ================= */
-initTeacher();
-initName();
+window.addEventListener('error', e=>{
+  try{
+    const msg='起動エラー: '+(e.message||'')+(e.lineno?' (行'+e.lineno+')':'');
+    ['pane-home','pane-teacher'].forEach(id=>{ const el=document.getElementById(id); if(el && /読みこみ中/.test(el.textContent)) el.innerHTML='<div class="empty" style="color:var(--miss)">'+msg+'<br><span style="font-size:12px; color:var(--ink-soft)">ブラウザのキャッシュが古い可能性があります。URLの末尾に ?v=3(教員は &v=3)を付けて開き直してください</span></div>'; });
+  }catch(x){}
+});
+try{ initTeacher(); }catch(e){ console.error(e); }
+try{ initName(); }catch(e){ console.error(e); }
 load();
+setTimeout(()=>{ ['pane-home','pane-teacher'].forEach(id=>{ const el=document.getElementById(id); if(el && /^\s*読みこみ中/.test(el.textContent)) el.innerHTML='<div class="empty">サーバーの応答がありません(20秒)。<br><span style="font-size:12px">GAS_URLのデプロイが「全員がアクセス可」になっているか、新バージョンでデプロイされているかを確認してください。</span><br><button class="ghost" id="reloadBtn2" style="margin-top:10px">🔄 再読み込み</button></div>'; const b=document.getElementById('reloadBtn2'); if(b) b.onclick=()=>location.reload(); }); }, 20000);
 })();
 </script>
 </body>
